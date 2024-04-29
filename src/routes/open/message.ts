@@ -170,8 +170,6 @@ messageRouter.get('/all', (request: Request, response: Response) => {
         });
 });
 
-
-
 /**
  * @api {get} /message Request to retrieve entries
  *
