@@ -1,5 +1,11 @@
 //express is the framework we're going to use to handle requests
-import express, { NextFunction, Request, Response, Router } from 'express';
+import express, {
+    NextFunction,
+    Request,
+    Response,
+    Router,
+    response,
+} from 'express';
 //Access the connection to Postgres Database
 import { pool, validationFunctions } from '../../core/utilities';
 
@@ -164,6 +170,8 @@ messageRouter.get('/all', (request: Request, response: Response) => {
         });
 });
 
+
+
 /**
  * @api {get} /message Request to retrieve entries
  *
@@ -257,7 +265,7 @@ messageRouter.get('/:name', (request: Request, response: Response) => {
 });
 
 /**
- * @api {put} /message Request to change an entry
+ * @api {put} /message Re quest to change an entry
  *
  * @apiDescription Request to replace the message entry in the DB for name
  *
