@@ -40,29 +40,29 @@ const bookRouter: Router = express.Router();
 function createInterface(resultRow): IBook {
     let icons: IUrlIcon = {
         large: resultRow.image_url,
-        small: resultRow.small_image_url,
+        small: resultRow.image_small_url,
     };
     let count: number =
-        resultRow.ratings_1 +
-        resultRow.ratings_2 +
-        resultRow.ratings_3 +
-        resultRow.ratings_4 +
-        resultRow.ratings_5;
+        resultRow.rating_1_star +
+        resultRow.rating_2_star +
+        resultRow.rating_3_star +
+        resultRow.rating_4_star +
+        resultRow.rating_5_star;
     let avg: number =
-        (resultRow.ratings_1 +
-            resultRow.ratings_2 * 2 +
-            resultRow.ratings_3 * 3 +
-            resultRow.ratings_4 * 4 +
-            resultRow.ratings_5 * 5) /
+        (resultRow.rating_1_star +
+            resultRow.rating_2_star * 2 +
+            resultRow.rating_3_star * 3 +
+            resultRow.rating_4_star * 4 +
+            resultRow.rating_5_star * 5) /
         count;
     let rating: IRatings = {
         average: avg,
         count: count,
-        rating_1: resultRow.ratings_1,
-        rating_2: resultRow.ratings_2,
-        rating_3: resultRow.ratings_3,
-        rating_4: resultRow.ratings_4,
-        rating_5: resultRow.ratings_5,
+        rating_1: resultRow.rating_1_star,
+        rating_2: resultRow.rating_2_star,
+        rating_3: resultRow.rating_3_star,
+        rating_4: resultRow.rating_4_star,
+        rating_5: resultRow.rating_5_star,
     };
     let book: IBook = {
         isbn13: resultRow.isbn13,
@@ -84,7 +84,7 @@ bookRouter.get('/all', (request: Request, response: Response) => {
     pool.query(theQuery)
         .then((result) => {
             response.send({
-                entries: result.rows,
+                entries: result.rows.map(createInterface),
             });
         })
         .catch((error) => {
