@@ -75,7 +75,28 @@ function createInterface(resultRow): IBook {
     };
     return book;
 }
-
+/**
+ * @api {get} /book get all books
+ *
+ * @apiDescription Get all books from the database
+ *
+ * @apiName PostMessage
+ * @apiGroup Message
+ *
+ *
+ * @apiSuccess (Success 201) {Object} entry the IBook object:
+ * "IBook {
+        isbn13: number;
+        authors: string;
+        publication: number;
+        original_title: string;
+        title: string;
+        ratings: IRatings;
+        icons: IUrlIcon;
+}"
+ *
+ * @apiUse JSONError
+ */
 bookRouter.get('/all', (request: Request, response: Response) => {
     const theQuery =
         'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books';
@@ -83,7 +104,7 @@ bookRouter.get('/all', (request: Request, response: Response) => {
 
     pool.query(theQuery)
         .then((result) => {
-            response.send({
+            response.status(201).send({
                 entries: result.rows.map(createInterface),
             });
         })
