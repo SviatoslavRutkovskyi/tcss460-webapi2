@@ -42,22 +42,22 @@ function createInterface(resultRow): IBook {
         large: resultRow.image_url,
         small: resultRow.image_small_url,
     };
-    let count: number =
-        resultRow.rating_1_star +
-        resultRow.rating_2_star +
-        resultRow.rating_3_star +
-        resultRow.rating_4_star +
-        resultRow.rating_5_star;
-    let avg: number =
-        (resultRow.rating_1_star +
-            resultRow.rating_2_star * 2 +
-            resultRow.rating_3_star * 3 +
-            resultRow.rating_4_star * 4 +
-            resultRow.rating_5_star * 5) /
-        count;
+    // let count: number =
+    //     resultRow.rating_1_star +
+    //     resultRow.rating_2_star +
+    //     resultRow.rating_3_star +
+    //     resultRow.rating_4_star +
+    //     resultRow.rating_5_star;
+    // let avg: number =
+    //     (resultRow.rating_1_star +
+    //         resultRow.rating_2_star * 2 +
+    //         resultRow.rating_3_star * 3 +
+    //         resultRow.rating_4_star * 4 +
+    //         resultRow.rating_5_star * 5) /
+    //     count;
     let rating: IRatings = {
-        average: avg,
-        count: count,
+        average: resultRow.rating_avg,
+        count: resultRow.rating_count,
         rating_1: resultRow.rating_1_star,
         rating_2: resultRow.rating_2_star,
         rating_3: resultRow.rating_3_star,
@@ -75,13 +75,14 @@ function createInterface(resultRow): IBook {
     };
     return book;
 }
+
 /**
  * @api {get} /book get all books
  *
  * @apiDescription Get all books from the database
  *
- * @apiName PostMessage
- * @apiGroup Message
+ * @apiName GetBook
+ * @apiGroup Book
  *
  *
  * @apiSuccess (Success 201) {Object} entry the IBook object:
@@ -113,7 +114,50 @@ bookRouter.get('/all', (request: Request, response: Response) => {
             console.error('DB Query error on GET all');
             console.error(error);
             response.status(500).send({
-                message: 'THIS server error - contact support',
+                message: 'server error - contact support',
+            });
+        });
+});
+
+/**
+ * @api {get} /book get books
+ *
+ * @apiDescription Get all books from the database
+ *
+ * @apiName GetBook
+ * @apiGroup Book
+ *
+ *
+ * @apiSuccess (Success 201) {Object} entry the IBook object:
+ * "IBook {
+        isbn13: number;
+        authors: string;
+        publication: number;
+        original_title: string;
+        title: string;
+        ratings: IRatings;
+        icons: IUrlIcon;
+}"
+ *
+ * @apiUse JSONError
+ */
+bookRouter.get('/all', (request: Request, response: Response) => {
+    const theQuery =
+        'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books';
+    // const theQuery = 'SELECT * FROM books';
+
+    pool.query(theQuery)
+        .then((result) => {
+            response.status(201).send({
+                entries: result.rows.map(createInterface),
+            });
+        })
+        .catch((error) => {
+            //log the error
+            console.error('DB Query error on GET all');
+            console.error(error);
+            response.status(500).send({
+                message: 'server error - contact support',
             });
         });
 });
