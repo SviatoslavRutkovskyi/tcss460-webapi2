@@ -162,5 +162,109 @@ bookRouter.get('/all', (request: Request, response: Response) => {
         });
 });
 
+bookRouter.post(
+    '/',
+    (request: Request, response: Response, next: NextFunction) => {
+        const isbn13: string = request.body.isbn13 as string;
+        if (validationFunctions.isNumberProvided(isbn13)) {
+            const theQuery = 'SELECT 1 FROM books WHERE isbn13 = $1';
+            const values = [isbn13];
+            pool.query(theQuery, values)
+                .then((result) => {
+                    if (result.rowCount > 0) {
+                        response.status(404).send({
+                            message: `isbn13 ${isbn13} already exists in the database`,
+                        });
+                    } else {
+                        next();
+                    }
+                })
+                .catch((error) => {
+                    //log the error
+                    console.error(
+                        'DB Query error on isbn13 uniquess validation'
+                    );
+                    console.error(error);
+                    response.status(500).send({
+                        message: 'server error - contact support',
+                    });
+                });
+        } else {
+            console.error('Invalid or missing isbn13');
+            response.status(400).send({
+                message:
+                    'Invalid or missing isbn13 - please refer to documentation',
+            });
+        }
+    },
+    (request: Request, response: Response, next: NextFunction) => {
+        const author: string = request.body.authors as string;
+        if (validationFunctions.isStringProvided(author)) {
+            next();
+        } else {
+            console.error('Invalid or missing author');
+            response.status(400).send({
+                message:
+                    'Invalid or missing author - please refer to documentation',
+            });
+        }
+    },
+    (request: Request, response: Response, next: NextFunction) => {
+        const publication_year: string = request.body
+            .publication_year as string;
+        if (
+            validationFunctions.isNumberProvided(publication_year) &&
+            parseInt(publication_year) < 2025 &&
+            parseInt(publication_year) > 0
+        ) {
+            next();
+        } else {
+            console.error('Invalid or missing publication year');
+            response.status(400).send({
+                message:
+                    'Invalid or missing publication year - please refer to documentation',
+            });
+        }
+    },
+    (request: Request, response: Response) => {
+        //We're using placeholders ($1, $2, $3) in the SQL query string to avoid SQL Injection
+        //If you want to read more: https://stackoverflow.com/a/8265319
+        const theQuery =
+            'INSERT INTO DEMO(Name, Message, Priority) VALUES ($1, $2, $3) RETURNING *';
+        const values = [
+            request.body.name,
+            request.body.message,
+            request.body.priority,
+        ];
+
+        pool.query(theQuery, values)
+            .then((result) => {
+                // result.rows array are the records returned from the SQL statement.
+                // An INSERT statement will return a single row, the row that was inserted.
+                response.status(201).send({
+                    // entry: format(result.rows[0]),
+                });
+            })
+            .catch((error) => {
+                if (
+                    error.detail != undefined &&
+                    (error.detail as string).endsWith('already exists.')
+                ) {
+                    console.error('Name exists');
+                    response.status(400).send({
+                        message: 'Name exists',
+                    });
+                } else {
+                    //log the error
+                    console.error('DB Query error on POST');
+                    console.error(error);
+                    response.status(500).send({
+                        message: 'server error - contact support',
+                    });
+                }
+            });
+    }
+);
+
 // "return" the router
 export { bookRouter };
