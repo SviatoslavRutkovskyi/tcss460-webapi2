@@ -120,15 +120,15 @@ bookRouter.get('/all', (request: Request, response: Response) => {
 });
 
 /**
- * @api {get} /book get books
+ * @api {get} /isbn get book information based on isbn
  *
- * @apiDescription Get all books from the database
+ * @apiDescription Get book from the database based on isbn
  *
- * @apiName GetBook
+ * @apiName GetISBN
  * @apiGroup Book
  *
  *
- * @apiSuccess (Success 201) {Object} entry the IBook object:
+ * @apiSuccess (Success 200) {Object} entry the IBook object:
  * "IBook {
         isbn13: number;
         authors: string;
@@ -140,21 +140,27 @@ bookRouter.get('/all', (request: Request, response: Response) => {
 }"
  *
  * @apiUse JSONError
+ * (404) Book not found in the database
+ * (500) Internal error with the query or connectivity issue to database
  */
-bookRouter.get('/all', (request: Request, response: Response) => {
+bookRouter.get('/isbn', (request: Request, response: Response) => {
+    const { id } = request.query;
     const theQuery =
-        'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books';
-    // const theQuery = 'SELECT * FROM books';
+        'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books WHERE isbn13 = $1';
 
-    pool.query(theQuery)
+    pool.query(theQuery, [id])
         .then((result) => {
-            response.status(201).send({
-                entries: result.rows.map(createInterface),
-            });
+            if (result.rows.length > 0) {
+                response.status(200).send({
+                    entries: result.rows[0],
+                });
+            } else {
+                response.status(404).send({ message: 'Book not found' }); //No book found in database
+            }
         })
         .catch((error) => {
             //log the error
-            console.error('DB Query error on GET all');
+            console.error('DB Query error on GET ISBN');
             console.error(error);
             response.status(500).send({
                 message: 'server error - contact support',
@@ -162,6 +168,46 @@ bookRouter.get('/all', (request: Request, response: Response) => {
         });
 });
 
+/**
+ * @api {post} /book Request to add an entry
+ *
+ * @apiDescription Request to add a book  to the DB
+ *
+ * @apiName PostBooks
+ * @apiGroup Books
+ *
+ * @apiBody {nubmer} isbn13 book isbn13 *unique
+ * @apiBody {string} authors author of the given book
+ * @apiBody {number} pulbication_year publication year of the book [0-2024]
+ * @apiBody {string} original_title original title of the book
+ * @apiBody {string} title title of the book
+ * @apiBody {number} rating_1_star nuber of 1 star ratings [0+]
+ * @apiBody {number} rating_2_star nuber of 2 star ratings [0+]
+ * @apiBody {number} rating_3_star nuber of 3 star ratings [0+]
+ * @apiBody {number} rating_4_star nuber of 4 star ratings [0+]
+ * @apiBody {number} rating_5_star nuber of 5 star ratings [0+]
+ * @apiBody {string} image_url image url
+ * @apiBody {string} image_small_url small image url
+ *
+ * @apiSuccess (Success 201) {IBook} entry the IBook object:
+ *      "IBook {
+        isbn13: number;
+        authors: string;
+        publication: number;
+        original_title: string;
+        title: string;
+        ratings: IRatings;
+        icons: IUrlIcon;
+}"
+ *
+ * @apiError (400: isbn13 exists) {String} message "isbn13 ${isbn13} already exists in the database"
+ * @apiError (400: Invalid or missing isbn13) {String} message "Invalid or missing isbn13 - please refer to documentation"
+ * @apiError (400: Invalid or missing author) {String} message "Invalid or missing author - please refer to documentation"
+ * @apiError (400: Invalid or missing publication year) {String} message "Invalid or missing publication year - please refer to documentation"
+ * @apiError (400: Invalid or missing original title) {String} message "Invalid or missing original title - please refer to documentation"
+ * @apiError (400: Invalid or missing title) {String} message "Invalid or missing title - please refer to documentation"
+ * @apiUse JSONError
+ */
 bookRouter.post(
     '/',
     (request: Request, response: Response, next: NextFunction) => {
@@ -186,7 +232,8 @@ bookRouter.post(
                     );
                     console.error(error);
                     response.status(500).send({
-                        message: 'server error - contact support',
+                        message: 'server error - contact support 1',
+                        cl: 'failed on isbn13 validation',
                     });
                 });
         } else {
@@ -226,42 +273,134 @@ bookRouter.post(
             });
         }
     },
+    (request: Request, response: Response, next: NextFunction) => {
+        const original_title: string = request.body.original_title as string;
+        if (validationFunctions.isStringProvided(original_title)) {
+            next();
+        } else {
+            console.error('Invalid or missing original title');
+            response.status(400).send({
+                message:
+                    'Invalid or missing original title - please refer to documentation',
+            });
+        }
+    },
+    (request: Request, response: Response, next: NextFunction) => {
+        const title: string = request.body.title as string;
+        if (validationFunctions.isStringProvided(title)) {
+            next();
+        } else {
+            console.error('Invalid or missing title');
+            response.status(400).send({
+                message:
+                    'Invalid or missing title - please refer to documentation',
+            });
+        }
+    },
+    (request: Request, response: Response, next: NextFunction) => {
+        const rating_1_star: string = request.body.rating_1_star as string;
+        if (
+            validationFunctions.isNumberProvided(rating_1_star) &&
+            parseInt(rating_1_star) >= 0
+        ) {
+            next();
+        } else {
+            console.error('Invalid or missing 1 star rating');
+            response.status(400).send({
+                message:
+                    'Invalid or missing 1 star rating - please refer to documentation',
+            });
+        }
+    },
+    (request: Request, response: Response, next: NextFunction) => {
+        const rating_1_star: string = request.body.rating_1_star as string;
+        if (
+            validationFunctions.isNumberProvided(rating_1_star) &&
+            parseInt(rating_1_star) >= 0
+        ) {
+            next();
+        } else {
+            console.error('Invalid or missing 1 star rating');
+            response.status(400).send({
+                message:
+                    'Invalid or missing 1 star rating - please refer to documentation',
+            });
+        }
+    },
     (request: Request, response: Response) => {
         //We're using placeholders ($1, $2, $3) in the SQL query string to avoid SQL Injection
         //If you want to read more: https://stackoverflow.com/a/8265319
-        const theQuery =
-            'INSERT INTO DEMO(Name, Message, Priority) VALUES ($1, $2, $3) RETURNING *';
-        const values = [
-            request.body.name,
-            request.body.message,
-            request.body.priority,
-        ];
-
-        pool.query(theQuery, values)
+        const theCountQuery = 'SELECT COUNT(*) FROM books';
+        pool.query(theCountQuery)
             .then((result) => {
-                // result.rows array are the records returned from the SQL statement.
-                // An INSERT statement will return a single row, the row that was inserted.
-                response.status(201).send({
-                    // entry: format(result.rows[0]),
-                });
+                const theQuery =
+                    'INSERT INTO BOOKS(id, isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *';
+                let count: number =
+                    parseInt(request.body.rating_1_star) +
+                    parseInt(request.body.rating_2_star) +
+                    parseInt(request.body.rating_3_star) +
+                    parseInt(request.body.rating_4_star) +
+                    parseInt(request.body.rating_5_star);
+                let avg: number =
+                    (parseInt(request.body.rating_1_star) +
+                        parseInt(request.body.rating_2_star) * 2 +
+                        parseInt(request.body.rating_3_star) * 3 +
+                        parseInt(request.body.rating_4_star) * 4 +
+                        parseInt(request.body.rating_5_star) * 5) /
+                    count;
+                const values = [
+                    parseInt(result.rows[0].count) + 1,
+                    request.body.isbn13,
+                    request.body.authors,
+                    request.body.publication_year,
+                    request.body.original_title,
+                    request.body.title,
+                    avg,
+                    count,
+                    request.body.rating_1_star,
+                    request.body.rating_2_star,
+                    request.body.rating_3_star,
+                    request.body.rating_4_star,
+                    request.body.rating_5_star,
+                    request.body.image_url,
+                    request.body.image_small_url,
+                ];
+
+                pool.query(theQuery, values)
+                    .then((result) => {
+                        // result.rows array are the records returned from the SQL statement.
+                        // An INSERT statement will return a single row, the row that was inserted.
+                        response.status(201).send({
+                            entry: createInterface(result.rows[0]),
+                        });
+                    })
+                    .catch((error) => {
+                        if (
+                            error.detail != undefined &&
+                            (error.detail as string).endsWith('already exists.')
+                        ) {
+                            console.error('Name exists');
+                            response.status(400).send({
+                                message: 'Name exists',
+                            });
+                        } else {
+                            //log the error
+                            console.error('DB Query error on POST');
+                            console.error(error);
+                            response.status(500).send({
+                                message: 'server error - contact support 2',
+                                cl: result.rows[0].count + 1,
+                            });
+                        }
+                    });
             })
             .catch((error) => {
-                if (
-                    error.detail != undefined &&
-                    (error.detail as string).endsWith('already exists.')
-                ) {
-                    console.error('Name exists');
-                    response.status(400).send({
-                        message: 'Name exists',
-                    });
-                } else {
-                    //log the error
-                    console.error('DB Query error on POST');
-                    console.error(error);
-                    response.status(500).send({
-                        message: 'server error - contact support',
-                    });
-                }
+                console.error('DB Query error on POST, Count');
+                console.error(error);
+                response.status(500).send({
+                    message: 'server error - contact support 3',
+                    cl: 'failed on count',
+                });
             });
     }
 );
