@@ -120,15 +120,15 @@ bookRouter.get('/all', (request: Request, response: Response) => {
 });
 
 /**
- * @api {get} /book get books
+ * @api {get} /isbn get book information based on isbn
  *
- * @apiDescription Get all books from the database
+ * @apiDescription Get book from the database based on isbn
  *
- * @apiName GetBook
+ * @apiName GetISBN
  * @apiGroup Book
  *
  *
- * @apiSuccess (Success 201) {Object} entry the IBook object:
+ * @apiSuccess (Success 200) {Object} entry the IBook object:
  * "IBook {
         isbn13: number;
         authors: string;
@@ -140,21 +140,28 @@ bookRouter.get('/all', (request: Request, response: Response) => {
 }"
  *
  * @apiUse JSONError
+ * (404) Book not found in the database
+ * (500) Internal error with the query or connectivity issue to database
  */
-bookRouter.get('/all', (request: Request, response: Response) => {
+bookRouter.get('/isbn', (request: Request, response: Response) => {
+    const {id} = request.query;
     const theQuery =
-        'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books';
-    // const theQuery = 'SELECT * FROM books';
+        'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books WHERE isbn13 = $1';
 
-    pool.query(theQuery)
+    pool.query(theQuery, [id])
         .then((result) => {
-            response.status(201).send({
-                entries: result.rows.map(createInterface),
-            });
+            if (result.rows.length > 0) {
+                response.status(200).send({
+                    entries: result.rows[0]
+                });  
+            } else {
+                response.status(404).send({ message: 'Book not found' });  //No book found in database
+            }
+            
         })
         .catch((error) => {
             //log the error
-            console.error('DB Query error on GET all');
+            console.error('DB Query error on GET ISBN');
             console.error(error);
             response.status(500).send({
                 message: 'server error - contact support',
