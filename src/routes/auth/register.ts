@@ -1,5 +1,13 @@
 // express is the framework we're going to use to handle requests
 import express, { Request, Response, Router, NextFunction } from 'express';
+// We want to import our middleware functions defined elsewhere
+import {
+    emailMiddlewareCheck,
+    passwordMiddlewareCheck,
+    phoneMiddlewareCheck,
+    roleMiddlewareCheck,
+    parametersMiddlewareCheck,
+} from '../../core/middleware/verificationChecks';
 
 import jwt from 'jsonwebtoken';
 
@@ -13,75 +21,80 @@ import {
     credentialingFunctions,
 } from '../../core/utilities';
 
-const isStringProvided = validationFunctions.isStringProvided;
-const isNumberProvided = validationFunctions.isNumberProvided;
+// const isStringProvided = validationFunctions.isStringProvided;
+// const isNumberProvided = validationFunctions.isNumberProvided;
 const generateHash = credentialingFunctions.generateHash;
 const generateSalt = credentialingFunctions.generateSalt;
 
 const registerRouter: Router = express.Router();
 
-// Here we will define the regex to validate our different user data
-const emailRegex: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const phoneRegex: RegExp = /^\(?\d{3}\)?[-. ]?\d{3}[-. ]?\d{4}$/;
-const passwordRegex: RegExp = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/; // TODO: I want to make this regex more specific, but I created this general one for now
+// // Here we will define the regex to validate our different user data
+// const emailRegex: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// const phoneRegex: RegExp = /^\(?\d{3}\)?[-. ]?\d{3}[-. ]?\d{4}$/;
+// const passwordRegex: RegExp =
+//     /^(?=.*[0-9])(?=.*[^a-zA-Z0-9])[a-zA-Z0-9\s!@#$%^&*()-_+=?.,;:{}[\]]{8,}$/;
 
 export interface IUserRequest extends Request {
     id: number;
 }
 
-/**
- * @apiDefine PasswordValidation
- * @apiParam {String} password The user's password. This must be a string containing at least 8 characters, with at least one letter and one number.
- */
-const isValidPassword = (password: string): boolean =>
-    isStringProvided(password) && passwordRegex.test(password);
+// /**
+//  * @apiDefine PasswordValidation
+//  * @apiParam {String} password The user's password. This must be a string containing at least 8 characters, with at least one special character and one number.
+//  *                    This password can contain any combination of any amount of special characters (including spaces), numbers, and letters once the other requirements are met.
+//  */
+// const isValidPassword = (password: string): boolean =>
+//     isStringProvided(password) && passwordRegex.test(password);
 
-/**
- * @apiDefine PhoneValidation
- * @apiParam {String} phone The user's phone number. This must be a valid phone number containing 10 numbers.
- *                                                   The phone number can be in the format of 123-456-7890, 123.456.7890, 1234567890, (123) 456-7890, etc.
- */
-const isValidPhone = (phone: string): boolean =>
-    isStringProvided(phone) && phoneRegex.test(phone);
+// /**
+//  * @apiDefine PhoneValidation
+//  * @apiParam {String} phone The user's phone number. This must be a valid phone number containing 10 numbers.
+//  *                                                   The phone number can be in the format of 123-456-7890, 123.456.7890, 1234567890, (123) 456-7890, etc.
+//  */
+// const isValidPhone = (phone: string): boolean =>
+//     isStringProvided(phone) && phoneRegex.test(phone);
 
-/**
- * @apiDefine RoleValidation
- * @apiParam {String} role The user's role. This must be a number between 1 and 5.
- */
-const isValidRole = (priority: string): boolean =>
-    validationFunctions.isNumberProvided(priority) &&
-    parseInt(priority) >= 1 &&
-    parseInt(priority) <= 5;
+// /**
+//  * @apiDefine RoleValidation
+//  * @apiParam {String} role The user's role. This must be a number between 1 and 5.
+//  */
+// const isValidRole = (priority: string): boolean =>
+//     validationFunctions.isNumberProvided(priority) &&
+//     parseInt(priority) >= 1 &&
+//     parseInt(priority) <= 5;
 
-/**
- * @apiDefine EmailValidation
- * @apiParam {String} email The user's email. This must be a valid email address in the format: [name]@[domain].[top-level domain].
- */
-const isValidEmail = (email: string): boolean =>
-    // Here we are using some regex to just check if the email follows regular email format [somename]@[domain].[something]
-    isStringProvided(email) && emailRegex.test(email);
+// /**
+//  * @apiDefine EmailValidation
+//  * @apiParam {String} email The user's email. This must be a valid email address in the format: [name]@[domain].[top-level domain].
+//  */
+// const isValidEmail = (email: string): boolean =>
+//     // Here we are using some regex to just check if the email follows regular email format [somename]@[domain].[something]
+//     isStringProvided(email) && emailRegex.test(email);
 
 // middleware functions may be defined elsewhere!
-const emailMiddlewareCheck = (
-    request: Request,
-    response: Response,
-    next: NextFunction
-) => {
-    if (isValidEmail(request.body.email)) {
-        next();
-    } else {
-        response.status(400).send({
-            message:
-                'Invalid or missing email  - please refer to documentation',
-        });
-    }
-};
+// const emailMiddlewareCheck = (
+//     request: Request,
+//     response: Response,
+//     next: NextFunction
+// ) => {
+//     if (isValidEmail(request.body.email)) {
+//         next();
+//     } else {
+//         response.status(400).send({
+//             message:
+//                 'Invalid or missing email  - please refer to documentation',
+//         });
+//     }
+// };
 
 /**
  * @api {post} /register Request to register a user
  *
- * @apiDescription Document this route. !**Document the password rules here**!
- * !**Document the role rules here**!
+ * @apiDescription  This route is used to register a new user.
+ *                  The user must provide a unique email and username.
+ *                  The password must be at least 8 characters long, and contain at least one special character and one number.
+ *                  The phone number must be a valid phone number.
+ *                  The role must be a number between 1 and 5.
  *
  * @apiUse EmailValidation
  * @apiUse PasswordValidation
@@ -113,54 +126,12 @@ const emailMiddlewareCheck = (
  */
 registerRouter.post(
     '/register',
-    emailMiddlewareCheck, // these middleware functions may be defined elsewhere!
-    (request: Request, response: Response, next: NextFunction) => {
-        //Verify that the caller supplied all the parameters
-        //In js, empty strings or null values evaluate to false
-        if (
-            isStringProvided(request.body.firstname) &&
-            isStringProvided(request.body.lastname) &&
-            isStringProvided(request.body.username)
-        ) {
-            next();
-        } else {
-            response.status(400).send({
-                message: 'Missing required information',
-            });
-        }
-    },
-    (request: Request, response: Response, next: NextFunction) => {
-        if (isValidPhone(request.body.phone)) {
-            next();
-            return;
-        } else {
-            response.status(400).send({
-                message:
-                    'Invalid or missing phone number  - please refer to documentation',
-            });
-            return;
-        }
-    },
-    (request: Request, response: Response, next: NextFunction) => {
-        if (isValidPassword(request.body.password)) {
-            next();
-        } else {
-            response.status(400).send({
-                message:
-                    'Invalid or missing password  - please refer to documentation',
-            });
-        }
-    },
-    (request: Request, response: Response, next: NextFunction) => {
-        if (isValidRole(request.body.role)) {
-            next();
-        } else {
-            response.status(400).send({
-                message:
-                    'Invalid or missing role  - please refer to documentation',
-            });
-        }
-    },
+    // We use these middleware checks defined in verificationChecks.ts to check all our user info
+    emailMiddlewareCheck,
+    passwordMiddlewareCheck,
+    phoneMiddlewareCheck,
+    roleMiddlewareCheck,
+    parametersMiddlewareCheck,
     (request: IUserRequest, response: Response, next: NextFunction) => {
         const theQuery =
             'INSERT INTO Account(firstname, lastname, username, email, phone, create_date, account_role) VALUES ($1, $2, $3, $4, $5, NOW(), $6) RETURNING account_id';
