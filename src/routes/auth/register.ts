@@ -20,31 +20,46 @@ const generateSalt = credentialingFunctions.generateSalt;
 
 const registerRouter: Router = express.Router();
 
+// Here we will define the regex to validate our different user data
+const emailRegex: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phoneRegex: RegExp = /^\(?\d{3}\)?[-. ]?\d{3}[-. ]?\d{4}$/;
+const passwordRegex: RegExp = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/; // TODO: I want to make this regex more specific, but I created this general one for now
+
 export interface IUserRequest extends Request {
     id: number;
 }
 
-// Add more/your own password validation here. The *rules* must be documented
-// and the client-side validation should match these rules.
+/**
+ * @apiDefine PasswordValidation
+ * @apiParam {String} password The user's password. This must be a string containing at least 8 characters, with at least one letter and one number.
+ */
 const isValidPassword = (password: string): boolean =>
-    isStringProvided(password) && password.length > 7;
+    isStringProvided(password) && passwordRegex.test(password);
 
-// Add more/your own phone number validation here. The *rules* must be documented
-// and the client-side validation should match these rules.
+/**
+ * @apiDefine PhoneValidation
+ * @apiParam {String} phone The user's phone number. This must be a valid phone number containing 10 numbers.
+ *                                                   The phone number can be in the format of 123-456-7890, 123.456.7890, 1234567890, (123) 456-7890, etc.
+ */
 const isValidPhone = (phone: string): boolean =>
-    isStringProvided(phone) && phone.length >= 10;
+    isStringProvided(phone) && phoneRegex.test(phone);
 
-// Add more/your own role validation here. The *rules* must be documented
-// and the client-side validation should match these rules.
+/**
+ * @apiDefine RoleValidation
+ * @apiParam {String} role The user's role. This must be a number between 1 and 5.
+ */
 const isValidRole = (priority: string): boolean =>
     validationFunctions.isNumberProvided(priority) &&
     parseInt(priority) >= 1 &&
     parseInt(priority) <= 5;
 
-// Add more/your own email validation here. The *rules* must be documented
-// and the client-side validation should match these rules.
+/**
+ * @apiDefine EmailValidation
+ * @apiParam {String} email The user's email. This must be a valid email address in the format: [name]@[domain].[top-level domain].
+ */
 const isValidEmail = (email: string): boolean =>
-    isStringProvided(email) && email.includes('@');
+    // Here we are using some regex to just check if the email follows regular email format [somename]@[domain].[something]
+    isStringProvided(email) && emailRegex.test(email);
 
 // middleware functions may be defined elsewhere!
 const emailMiddlewareCheck = (
@@ -67,6 +82,11 @@ const emailMiddlewareCheck = (
  *
  * @apiDescription Document this route. !**Document the password rules here**!
  * !**Document the role rules here**!
+ *
+ * @apiUse EmailValidation
+ * @apiUse PasswordValidation
+ * @apiUse PhoneValidation
+ * @apiUse RoleValidation
  *
  * @apiName PostAuth
  * @apiGroup Auth
