@@ -42,19 +42,6 @@ function createInterface(resultRow): IBook {
         large: resultRow.image_url,
         small: resultRow.image_small_url,
     };
-    // let count: number =
-    //     resultRow.rating_1_star +
-    //     resultRow.rating_2_star +
-    //     resultRow.rating_3_star +
-    //     resultRow.rating_4_star +
-    //     resultRow.rating_5_star;
-    // let avg: number =
-    //     (resultRow.rating_1_star +
-    //         resultRow.rating_2_star * 2 +
-    //         resultRow.rating_3_star * 3 +
-    //         resultRow.rating_4_star * 4 +
-    //         resultRow.rating_5_star * 5) /
-    //     count;
     let rating: IRatings = {
         average: resultRow.rating_avg,
         count: resultRow.rating_count,
@@ -67,7 +54,7 @@ function createInterface(resultRow): IBook {
     let book: IBook = {
         isbn13: resultRow.isbn13,
         authors: resultRow.authors,
-        publication: resultRow.original_publication_year,
+        publication: resultRow.publication_year,
         original_title: resultRow.original_title,
         title: resultRow.title,
         ratings: rating,
