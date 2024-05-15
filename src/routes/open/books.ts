@@ -127,8 +127,8 @@ bookRouter.get('/all', (request: Request, response: Response) => {
 }"
  *
  * @apiUse JSONError
- * (404) Book not found in the database
- * (500) Internal error with the query or connectivity issue to database
+ * @apiError (404) Book not found in the database
+ * @apiError (500) Internal error with the query or connectivity issue to database
  */
 bookRouter.get('/isbn', (request: Request, response: Response) => {
     const { id } = request.query;
