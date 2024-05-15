@@ -77,29 +77,23 @@ function validateBookData(
         rating_4_star,
         rating_5_star,
     } = request.body;
-    if (
-        !validationFunctions.isNumberProvided(isbn13) ||
-        isbn13.length !== 13 ||
-        ![
-            rating_1_star,
-            rating_2_star,
-            rating_3_star,
-            rating_4_star,
-            rating_5_star,
-        ].every(
-            (rating) =>
-                validationFunctions.isNumberProvided(rating) &&
-                parseInt(rating) >= 0
-        )
-    ) {
-        console.error('Invalid or missing book data');
-        return response
+    if (!isbn13 || isbn13.length !== 13) {
+        response
             .status(400)
-            .send(
-                'Invalid or missing book data - please refer to documentation'
-            );
+            .send('Invalid or missing isbn13 - please refer to documentation');
+    } else if (
+        rating_1_star === undefined ||
+        rating_2_star === undefined ||
+        rating_3_star === undefined ||
+        rating_4_star === undefined ||
+        rating_5_star === undefined
+    ) {
+        response
+            .status(400)
+            .send('Invalid or missing ratings – please refer to documentation');
+    } else {
+        next();
     }
-    next();
 }
 
 /**
@@ -449,16 +443,19 @@ bookRouter.post(
  * @apiBody {number} rating_4_star number of 4 star ratings [0+]
  * @apiBody {number} rating_5_star number of 5 star ratings [0+]
  *
- * @apiSuccess (Success 200) {IBook} alter the IBook object:
+* @apiSuccess (Success 200) {IBook} entry the IBook object:
  *      "Updated: {
- *          isbn13: number;
- *          authors: string;
- *              original_title: string;
- *          ratings: IRatings;
- *      };
+        isbn13: number;
+        authors: string;
+        publication: number;
+        original_title: string;
+        title: string;
+        ratings: IRatings;
+        icons: IUrlIcon;
+}"
  *
  * @apiError (400: Invalid or missing isbn13) {String} message "Invalid or missing isbn13 - please refer to documentation"
- * @apiError (400: Invalid or missing rating information) {String} message "Invalid or missing rating information - please refer to documentation"
+ * @apiError (400: Invalid or missing rating information) {String} message "Invalid or missing ratings - please refer to documentation"
  * @apiUse JSONError
  */
 // function mwValidNameMessageBody(
@@ -481,10 +478,49 @@ bookRouter.post(
 // }
 // const format = (resultRow) =>
 //     `{${resultRow.priority}} - [${resultRow.name}] says: ${resultRow.message}`;
+// bookRouter.put(
+//     '/',
+//     validateBookData,
+//     (request: Request, response: Response) => {
+//         const {
+//             isbn13,
+//             rating_1_star,
+//             rating_2_star,
+//             rating_3_star,
+//             rating_4_star,
+//             rating_5_star,
+//         } = request.body;
+//         const theQuery = `UPDATE Books SET rating_1_star = $1, rating_2_star = $2, rating_3_star = $3, rating_4_star = $4, rating_5_star = $5 WHERE isbn13 = $6 RETURNING *`;
+//         const values = [
+//             rating_1_star,
+//             rating_2_star,
+//             rating_3_star,
+//             rating_4_star,
+//             rating_5_star,
+//             isbn13,
+//         ];
+
+//         pool.query(theQuery, values)
+//             .then((result) => {
+//                 if (result.rowCount === 1) {
+//                     response.send({ updated: createInterface(result.rows[0]) });
+//                 } else {
+//                     response.status(404).send('ISBN not found');
+//                 }
+//             })
+//             .catch((error) => {
+//                 console.error('DB Query error on PUT', error);
+//                 response.status(500).send({
+//                     message: 'Server error - contact support',
+//                     error: error.message,
+//                 });
+//             });
+//     }
+// );
 bookRouter.put(
     '/',
     validateBookData,
-    (request: Request, response: Response) => {
+    async (request: Request, response: Response) => {
         const {
             isbn13,
             rating_1_star,
@@ -493,31 +529,71 @@ bookRouter.put(
             rating_4_star,
             rating_5_star,
         } = request.body;
-        const theQuery = `UPDATE Books SET rating_1_star = $1, rating_2_star = $2, rating_3_star = $3, rating_4_star = $4, rating_5_star = $5 WHERE isbn13 = $6 RETURNING *`;
-        const values = [
-            rating_1_star,
-            rating_2_star,
-            rating_3_star,
-            rating_4_star,
-            rating_5_star,
-            isbn13,
-        ];
 
-        pool.query(theQuery, values)
-            .then((result) => {
-                if (result.rowCount === 1) {
-                    response.send({ updated: createInterface(result.rows[0]) });
-                } else {
-                    response.status(404).send('ISBN not found');
-                }
-            })
-            .catch((error) => {
-                console.error('DB Query error on PUT', error);
-                response.status(500).send({
-                    message: 'Server error - contact support',
-                    error: error.message,
-                });
-            });
+        try {
+            await pool.query('BEGIN');
+            const currentRatingsQuery =
+                'SELECT rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, rating_count FROM Books WHERE isbn13 = $1';
+            const currentResult = await pool.query(currentRatingsQuery, [
+                isbn13,
+            ]);
+            if (currentResult.rows.length === 0) {
+                response.status(404).send('ISBN not found');
+                return;
+            }
+
+            const current = currentResult.rows[0];
+            const updatedRatings = {
+                rating_1_star:
+                    Number(current.rating_1_star) + Number(rating_1_star),
+                rating_2_star:
+                    Number(current.rating_2_star) + Number(rating_2_star),
+                rating_3_star:
+                    Number(current.rating_3_star) + Number(rating_3_star),
+                rating_4_star:
+                    Number(current.rating_4_star) + Number(rating_4_star),
+                rating_5_star:
+                    Number(current.rating_5_star) + Number(rating_5_star),
+            };
+            //console.log('Updated Ratings: ', updatedRatings);
+            const newCount =
+                updatedRatings.rating_1_star +
+                updatedRatings.rating_2_star +
+                updatedRatings.rating_3_star +
+                updatedRatings.rating_4_star +
+                updatedRatings.rating_5_star;
+            //console.log('New Count: ', newCount);
+            const totalStars =
+                Number(updatedRatings.rating_1_star) +
+                Number(updatedRatings.rating_2_star) * 2 +
+                Number(updatedRatings.rating_3_star) * 3 +
+                Number(updatedRatings.rating_4_star) * 4 +
+                Number(updatedRatings.rating_5_star) * 5;
+            //console.log('Total Stars: ', totalStars);
+            const newAverage = totalStars / newCount;
+            //console.log('New Average: ', newAverage);
+
+            const updateQuery =
+                'UPDATE Books SET rating_1_star = $1, rating_2_star = $2, rating_3_star = $3, rating_4_star = $4, rating_5_star = $5, rating_count = $6, rating_avg = $7 WHERE isbn13 = $8' +
+                ' RETURNING isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star;';
+            const updateValues = [
+                updatedRatings.rating_1_star,
+                updatedRatings.rating_2_star,
+                updatedRatings.rating_3_star,
+                updatedRatings.rating_4_star,
+                updatedRatings.rating_5_star,
+                Number(newCount),
+                Number(newAverage),
+                isbn13,
+            ];
+            //console.log('Update Values: ', updateValues);
+            const updateResult = await pool.query(updateQuery, updateValues);
+            await pool.query('COMMIT');
+            response.send({ updated: updateResult.rows[0] });
+        } catch (error) {
+            await pool.query('ROLLBACK');
+            response.status(500).send(error.toString());
+        }
     }
 );
 
