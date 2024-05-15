@@ -456,67 +456,52 @@ bookRouter.post(
  *
  * @apiError (400: Invalid or missing isbn13) {String} message "Invalid or missing isbn13 - please refer to documentation"
  * @apiError (400: Invalid or missing rating information) {String} message "Invalid or missing ratings - please refer to documentation"
+ * @apiError (500) Internal error with the query or connectivity issue to database
  * @apiUse JSONError
  */
-// function mwValidNameMessageBody(
-//     request: Request,
-//     response: Response,
-//     next: NextFunction
-// ) {
-//     if (
-//         isStringProvided(request.body.name) &&
-//         isStringProvided(request.body.message)
-//     ) {
-//         next();
-//     } else {
-//         console.error('Missing required information');
-//         response.status(400).send({
-//             message:
-//                 'Missing required information - please refer to documentation',
-//         });
-//     }
-// }
-// const format = (resultRow) =>
-//     `{${resultRow.priority}} - [${resultRow.name}] says: ${resultRow.message}`;
-// bookRouter.put(
-//     '/',
-//     validateBookData,
-//     (request: Request, response: Response) => {
-//         const {
-//             isbn13,
-//             rating_1_star,
-//             rating_2_star,
-//             rating_3_star,
-//             rating_4_star,
-//             rating_5_star,
-//         } = request.body;
-//         const theQuery = `UPDATE Books SET rating_1_star = $1, rating_2_star = $2, rating_3_star = $3, rating_4_star = $4, rating_5_star = $5 WHERE isbn13 = $6 RETURNING *`;
-//         const values = [
-//             rating_1_star,
-//             rating_2_star,
-//             rating_3_star,
-//             rating_4_star,
-//             rating_5_star,
-//             isbn13,
-//         ];
 
-//         pool.query(theQuery, values)
-//             .then((result) => {
-//                 if (result.rowCount === 1) {
-//                     response.send({ updated: createInterface(result.rows[0]) });
-//                 } else {
-//                     response.status(404).send('ISBN not found');
-//                 }
-//             })
-//             .catch((error) => {
-//                 console.error('DB Query error on PUT', error);
-//                 response.status(500).send({
-//                     message: 'Server error - contact support',
-//                     error: error.message,
-//                 });
-//             });
-//     }
-// );
+/**
+ * Old .put functionality that overwrote the ratings
+bookRouter.put(
+    '/',
+    validateBookData,
+    (request: Request, response: Response) => {
+        const {
+            isbn13,
+            rating_1_star,
+            rating_2_star,
+            rating_3_star,
+            rating_4_star,
+            rating_5_star,
+        } = request.body;
+        const theQuery = `UPDATE Books SET rating_1_star = $1, rating_2_star = $2, rating_3_star = $3, rating_4_star = $4, rating_5_star = $5 WHERE isbn13 = $6 RETURNING *`;
+        const values = [
+            rating_1_star,
+            rating_2_star,
+            rating_3_star,
+            rating_4_star,
+            rating_5_star,
+            isbn13,
+        ];
+
+        pool.query(theQuery, values)
+            .then((result) => {
+                if (result.rowCount === 1) {
+                    response.send({ updated: createInterface(result.rows[0]) });
+                } else {
+                    response.status(404).send('ISBN not found');
+                }
+            })
+            .catch((error) => {
+                console.error('DB Query error on PUT', error);
+                response.status(500).send({
+                    message: 'Server error - contact support',
+                    error: error.message,
+                });
+            });
+    }
+);
+ */
 bookRouter.put(
     '/',
     validateBookData,
