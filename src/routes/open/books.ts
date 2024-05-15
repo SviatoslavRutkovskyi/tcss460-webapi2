@@ -98,19 +98,35 @@ function createInterface(resultRow): IBook {
  *
  * @apiUse JSONError
  */
-bookRouter.get('/all', (request: Request, response: Response) => {
-    const theQuery =
-        'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books';
-    // const theQuery = 'SELECT * FROM books';
+bookRouter.get('/all', (request, response) => {
+    // Default values for pagination
+    let page = parseInt(request.query.page, 10);
+    if (!page || page < 1) {
+        page = 1; // Ensure page is always at least 1
+    }
+    
+    let pageSize = parseInt(request.query.pageSize, 10);
+    if (!pageSize || pageSize < 1) {
+        pageSize = 10; // Provide a reasonable default and ensure it's positive
+    }
+    const offset = (page - 1) * pageSize;
 
-    pool.query(theQuery)
+    const theQuery = `
+        SELECT isbn13, authors, publication_year, original_title, title, 
+               rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, 
+               image_url, image_small_url 
+        FROM books
+        LIMIT $1 OFFSET $2`;
+
+    pool.query(theQuery, [pageSize, offset])
         .then((result) => {
-            response.status(201).send({
+            response.status(200).send({
                 entries: result.rows.map(createInterface),
+                currentPage: page,
+                pageSize: pageSize
             });
         })
         .catch((error) => {
-            //log the error
             console.error('DB Query error on GET all');
             console.error(error);
             response.status(500).send({
@@ -162,6 +178,217 @@ bookRouter.get('/isbn', (request: Request, response: Response) => {
         .catch((error) => {
             //log the error
             console.error('DB Query error on GET ISBN');
+            console.error(error);
+            response.status(500).send({
+                message: 'server error - contact support',
+            });
+        });
+});
+
+/**
+ * @api {get} /book/author get all books with a specific author.
+ *
+ * @apiDescription Get all books from the database using a specific author even if the book has co-authors.
+ *
+ * @apiName GetBook
+ * @apiGroup Book
+ *
+ *
+ * @apiSuccess (Success 200) {Object} entry the IBook object:
+ * "IBook {
+        isbn13: number;
+        authors: string;
+        publication: number;
+        original_title: string;
+        title: string;
+        ratings: IRatings;
+        icons: IUrlIcon;
+}"
+ *
+ * @apiUse JSONError
+ * (404) Books not found by that author
+ * (505) Connectivity issue to database or error with SQL query
+ */
+bookRouter.get('/author', (request: Request, response: Response) => {
+    const { authorName } = request.query;
+    const theQuery =
+        'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books WHERE authors ILIKE $1';
+
+    pool.query(theQuery, [`%${authorName}%`])
+        .then((result) => {
+            if (result.rows.length > 0) {
+                response.status(200).send({
+                    entries: result.rows.map(createInterface)
+                });  
+            } else {
+                response.status(404).send({ message: 'Book not found with that author(s)' });  //No book found in database
+            }
+            
+        })
+        .catch((error) => {
+            //log the error
+            console.error('DB Query error on GET ISBN');
+            console.error(error);
+            response.status(500).send({
+                message: 'server error - contact support',
+            });
+        });
+});
+
+/**
+ * @api {get} /book/title get all books with a specific title.
+ *
+ * @apiDescription Get all books from the database using a specific title.
+ *
+ * @apiName GetBook
+ * @apiGroup Book
+ *
+ *
+ * @apiSuccess (Success 200) {Object} entry the IBook object:
+ * "IBook {
+        isbn13: number;
+        authors: string;
+        publication: number;
+        original_title: string;
+        title: string;
+        ratings: IRatings;
+        icons: IUrlIcon;
+}"
+ *
+ * @apiUse JSONError
+ * (404) Books not found by that title
+ * (505) Connectivity issue to database or error with SQL query
+ */
+bookRouter.get('/title', (request: Request, response: Response) => {
+    const { titleName } = request.query;
+    const theQuery =
+        'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books WHERE original_title OR title ILIKE $1';
+
+    pool.query(theQuery, [`%${titleName}%`])
+        .then((result) => {
+            if (result.rows.length > 0) {
+                response.status(200).send({
+                    entries: result.rows.map(createInterface)
+                });  
+            } else {
+                response.status(404).send({ message: 'Book not found with that title' });  
+            }
+            
+        })
+        .catch((error) => {
+            //log the error
+            console.error('DB Query error on GET title');
+            console.error(error);
+            response.status(500).send({
+                message: 'server error - contact support',
+            });
+        });
+});
+
+/**
+ * @api {get} /book/rating get all books with a specific rating equal to the value and higher.
+ *
+ * @apiDescription Get all books from the database using a rating.
+ *
+ * @apiName GetBook
+ * @apiGroup Book
+ *
+ *
+ * @apiSuccess (Success 200) {Object} entry the IBook object:
+ * "IBook {
+        isbn13: number;
+        authors: string;
+        publication: number;
+        original_title: string;
+        title: string;
+        ratings: IRatings;
+        icons: IUrlIcon;
+}"
+ *
+ * @apiUse JSONError
+ * (404) the minRating isn't validated/not a valid number.
+ * (505) Connectivity issue to database or error with SQL query
+ */
+bookRouter.get('/rating', (request: Request, response: Response) => {
+    const { minRating } = request.query; // Get the minimum rating from query parameters
+
+    if (!minRating || isNaN(parseFloat(minRating))) {
+        return response.status(400).send({ message: 'Invalid or missing minRating parameter' });
+    }
+
+    const theQuery = `
+        SELECT isbn13, authors, publication_year, original_title, title,
+               rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star,
+               image_url, image_small_url, average_rating
+        FROM books
+        WHERE average_rating >= $1`;
+
+    pool.query(theQuery, [minRating])
+        .then((result) => {
+            if (result.rows.length > 0) {
+                response.status(200).send({
+                    entries: result.rows.map(createInterface),
+                });
+            } else {
+                response.status(404).send({ message: 'No books found with the specified rating' });
+            }
+        })
+        .catch((error) => {
+            console.error('Database query error on GET ratings:', error);
+            response.status(500).send({
+                message: 'Server error - contact support',
+            });
+        });
+});
+
+/**
+ * @api {get} /book/publication get all books with a specific publication year.
+ *
+ * @apiDescription Get all books from the database using a specific year.
+ *
+ * @apiName GetBook
+ * @apiGroup Book
+ *
+ *
+ * @apiSuccess (Success 200) {Object} entry the IBook object:
+ * "IBook {
+        isbn13: number;
+        authors: string;
+        publication: number;
+        original_title: string;
+        title: string;
+        ratings: IRatings;
+        icons: IUrlIcon;
+}"
+ *
+ * @apiUse JSONError
+ * (404) Books not found by that year
+ * (505) Connectivity issue to database or error with SQL query
+ */
+bookRouter.get('/publication', (request: Request, response: Response) => {
+    const { year } = request.query;
+    if (!year || isNaN(parseInt(year))) {
+        return response.status(400).send({ message: 'Invalid or missing year parameter' });
+    }
+
+    const theQuery = 
+        'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books WHERE publication_year = $1';
+    
+
+    pool.query(theQuery, [`%${year}%`])
+        .then((result) => {
+            if (result.rows.length > 0) {
+                response.status(200).send({
+                    entries: result.rows.map(createInterface)
+                });  
+            } else {
+                response.status(404).send({ message: 'Book not found with that year' });  //No book found in database
+            }
+            
+        })
+        .catch((error) => {
+            //log the error
+            console.error('DB Query error on GET publication');
             console.error(error);
             response.status(500).send({
                 message: 'server error - contact support',
