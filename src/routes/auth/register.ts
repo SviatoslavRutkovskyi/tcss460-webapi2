@@ -17,8 +17,6 @@ const key = {
 
 import { pool, credentialingFunctions } from '../../core/utilities';
 
-// const isStringProvided = validationFunctions.isStringProvided;
-// const isNumberProvided = validationFunctions.isNumberProvided;
 const generateHash = credentialingFunctions.generateHash;
 const generateSalt = credentialingFunctions.generateSalt;
 
@@ -34,13 +32,8 @@ export interface IUserRequest extends Request {
  * @apiDescription  This route is used to register a new user.
  *                  The user must provide a unique email and username.
  *                  The password must be at least 8 characters long, and contain at least one special character and one number.
- *                  The phone number must be a valid phone number.
+ *                  The phone number must be a valid phone number (this includes any possible valid formats).
  *                  The role must be a number between 1 and 5.
- *
- * @apiUse EmailValidation
- * @apiUse PasswordValidation
- * @apiUse PhoneValidation
- * @apiUse RoleValidation
  *
  * @apiName PostAuth
  * @apiGroup Auth
