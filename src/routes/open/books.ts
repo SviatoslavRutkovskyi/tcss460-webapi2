@@ -42,19 +42,6 @@ function createInterface(resultRow): IBook {
         large: resultRow.image_url,
         small: resultRow.image_small_url,
     };
-    // let count: number =
-    //     resultRow.rating_1_star +
-    //     resultRow.rating_2_star +
-    //     resultRow.rating_3_star +
-    //     resultRow.rating_4_star +
-    //     resultRow.rating_5_star;
-    // let avg: number =
-    //     (resultRow.rating_1_star +
-    //         resultRow.rating_2_star * 2 +
-    //         resultRow.rating_3_star * 3 +
-    //         resultRow.rating_4_star * 4 +
-    //         resultRow.rating_5_star * 5) /
-    //     count;
     let rating: IRatings = {
         average: resultRow.rating_avg,
         count: resultRow.rating_count,
@@ -67,7 +54,7 @@ function createInterface(resultRow): IBook {
     let book: IBook = {
         isbn13: resultRow.isbn13,
         authors: resultRow.authors,
-        publication: resultRow.original_publication_year,
+        publication: resultRow.publication_year,
         original_title: resultRow.original_title,
         title: resultRow.title,
         ratings: rating,
@@ -140,8 +127,8 @@ bookRouter.get('/all', (request: Request, response: Response) => {
 }"
  *
  * @apiUse JSONError
- * (404) Book not found in the database
- * (500) Internal error with the query or connectivity issue to database
+ * @apiError (404) Book not found in the database
+ * @apiError (500) Internal error with the query or connectivity issue to database
  */
 bookRouter.get('/isbn', (request: Request, response: Response) => {
     const { id } = request.query;
@@ -176,7 +163,7 @@ bookRouter.get('/isbn', (request: Request, response: Response) => {
  * @apiName PostBooks
  * @apiGroup Books
  *
- * @apiBody {nubmer} isbn13 book isbn13 *unique
+ * @apiBody {nubmer} isbn13 book isbn13 *unique [13 digits]
  * @apiBody {string} authors author of the given book
  * @apiBody {number} pulbication_year publication year of the book [0-2024]
  * @apiBody {string} original_title original title of the book
@@ -200,42 +187,24 @@ bookRouter.get('/isbn', (request: Request, response: Response) => {
         icons: IUrlIcon;
 }"
  *
- * @apiError (400: isbn13 exists) {String} message "isbn13 ${isbn13} already exists in the database"
  * @apiError (400: Invalid or missing isbn13) {String} message "Invalid or missing isbn13 - please refer to documentation"
+ * @apiError (400: isbn13 exists) {String} message "isbn13 ${isbn13} already exists in the database"
  * @apiError (400: Invalid or missing author) {String} message "Invalid or missing author - please refer to documentation"
  * @apiError (400: Invalid or missing publication year) {String} message "Invalid or missing publication year - please refer to documentation"
  * @apiError (400: Invalid or missing original title) {String} message "Invalid or missing original title - please refer to documentation"
  * @apiError (400: Invalid or missing title) {String} message "Invalid or missing title - please refer to documentation"
+ * @apiError (400: Invalid or missing rating information) {String} message "Invalid or missing rating information - please refer to documentation"
  * @apiUse JSONError
  */
 bookRouter.post(
     '/',
     (request: Request, response: Response, next: NextFunction) => {
         const isbn13: string = request.body.isbn13 as string;
-        if (validationFunctions.isNumberProvided(isbn13)) {
-            const theQuery = 'SELECT 1 FROM books WHERE isbn13 = $1';
-            const values = [isbn13];
-            pool.query(theQuery, values)
-                .then((result) => {
-                    if (result.rowCount > 0) {
-                        response.status(404).send({
-                            message: `isbn13 ${isbn13} already exists in the database`,
-                        });
-                    } else {
-                        next();
-                    }
-                })
-                .catch((error) => {
-                    //log the error
-                    console.error(
-                        'DB Query error on isbn13 uniquess validation'
-                    );
-                    console.error(error);
-                    response.status(500).send({
-                        message: 'server error - contact support 1',
-                        cl: 'failed on isbn13 validation',
-                    });
-                });
+        if (
+            validationFunctions.isNumberProvided(isbn13) &&
+            isbn13.length == 13
+        ) {
+            next();
         } else {
             console.error('Invalid or missing isbn13');
             response.status(400).send({
@@ -243,6 +212,30 @@ bookRouter.post(
                     'Invalid or missing isbn13 - please refer to documentation',
             });
         }
+    },
+    (request: Request, response: Response, next: NextFunction) => {
+        const isbn13: string = request.body.isbn13 as string;
+        const theQuery = 'SELECT 1 FROM books WHERE isbn13 = $1';
+        const values = [isbn13];
+        pool.query(theQuery, values)
+            .then((result) => {
+                if (result.rowCount > 0) {
+                    response.status(400).send({
+                        message: `isbn13 ${isbn13} already exists in the database`,
+                    });
+                } else {
+                    next();
+                }
+            })
+            .catch((error) => {
+                //log the error
+                console.error('DB Query error on isbn13 uniquess validation');
+                console.error(error);
+                response.status(500).send({
+                    message: 'server error - contact support 1',
+                    cl: 'failed on isbn13 validation',
+                });
+            });
     },
     (request: Request, response: Response, next: NextFunction) => {
         const author: string = request.body.authors as string;
@@ -299,38 +292,35 @@ bookRouter.post(
     },
     (request: Request, response: Response, next: NextFunction) => {
         const rating_1_star: string = request.body.rating_1_star as string;
+        const rating_2_star: string = request.body.rating_2_star as string;
+        const rating_3_star: string = request.body.rating_3_star as string;
+        const rating_4_star: string = request.body.rating_4_star as string;
+        const rating_5_star: string = request.body.rating_5_star as string;
         if (
             validationFunctions.isNumberProvided(rating_1_star) &&
-            parseInt(rating_1_star) >= 0
+            validationFunctions.isNumberProvided(rating_2_star) &&
+            validationFunctions.isNumberProvided(rating_3_star) &&
+            validationFunctions.isNumberProvided(rating_4_star) &&
+            validationFunctions.isNumberProvided(rating_5_star) &&
+            parseInt(rating_1_star) >= 0 &&
+            parseInt(rating_2_star) >= 0 &&
+            parseInt(rating_3_star) >= 0 &&
+            parseInt(rating_4_star) >= 0 &&
+            parseInt(rating_5_star) >= 0
         ) {
             next();
         } else {
-            console.error('Invalid or missing 1 star rating');
+            console.error('Invalid or missing rating information');
             response.status(400).send({
                 message:
-                    'Invalid or missing 1 star rating - please refer to documentation',
-            });
-        }
-    },
-    (request: Request, response: Response, next: NextFunction) => {
-        const rating_1_star: string = request.body.rating_1_star as string;
-        if (
-            validationFunctions.isNumberProvided(rating_1_star) &&
-            parseInt(rating_1_star) >= 0
-        ) {
-            next();
-        } else {
-            console.error('Invalid or missing 1 star rating');
-            response.status(400).send({
-                message:
-                    'Invalid or missing 1 star rating - please refer to documentation',
+                    'Invalid or missing rating information - please refer to documentation',
             });
         }
     },
     (request: Request, response: Response) => {
         //We're using placeholders ($1, $2, $3) in the SQL query string to avoid SQL Injection
         //If you want to read more: https://stackoverflow.com/a/8265319
-        const theCountQuery = 'SELECT COUNT(*) FROM books';
+        const theCountQuery = 'SELECT MAX(id) FROM books';
         pool.query(theCountQuery)
             .then((result) => {
                 const theQuery =
@@ -349,7 +339,7 @@ bookRouter.post(
                         parseInt(request.body.rating_5_star) * 5) /
                     count;
                 const values = [
-                    parseInt(result.rows[0].count) + 1,
+                    parseInt(result.rows[0].max) + 1,
                     request.body.isbn13,
                     request.body.authors,
                     request.body.publication_year,
