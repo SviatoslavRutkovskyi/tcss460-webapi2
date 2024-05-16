@@ -120,12 +120,13 @@ function validateBookData(
  */
 bookRouter.get('/all', (request, response) => {
     // Default values for pagination
-    let page = parseInt(request.query.page, 10);
+    // console.log(request.query.page);
+    let page = parseInt(request.query.page as string, 10);
     if (!page || page < 1) {
         page = 1; // Ensure page is always at least 1
     }
-    
-    let pageSize = parseInt(request.query.pageSize, 10);
+
+    let pageSize = parseInt(request.query.pageSize as string, 10);
     if (!pageSize || pageSize < 1) {
         pageSize = 10; // Provide a reasonable default and ensure it's positive
     }
@@ -143,7 +144,7 @@ bookRouter.get('/all', (request, response) => {
             response.status(200).send({
                 entries: result.rows.map(createInterface),
                 currentPage: page,
-                pageSize: pageSize
+                pageSize: pageSize,
             });
         })
         .catch((error) => {
@@ -237,12 +238,13 @@ bookRouter.get('/author', (request: Request, response: Response) => {
         .then((result) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
-                    entries: result.rows.map(createInterface)
-                });  
+                    entries: result.rows.map(createInterface),
+                });
             } else {
-                response.status(404).send({ message: 'Book not found with that author(s)' });  //No book found in database
+                response
+                    .status(404)
+                    .send({ message: 'Book not found with that author(s)' }); //No book found in database
             }
-            
         })
         .catch((error) => {
             //log the error
@@ -287,12 +289,13 @@ bookRouter.get('/title', (request: Request, response: Response) => {
         .then((result) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
-                    entries: result.rows.map(createInterface)
-                });  
+                    entries: result.rows.map(createInterface),
+                });
             } else {
-                response.status(404).send({ message: 'Book not found with that title' });  
+                response
+                    .status(404)
+                    .send({ message: 'Book not found with that title' });
             }
-            
         })
         .catch((error) => {
             //log the error
@@ -331,8 +334,10 @@ bookRouter.get('/title', (request: Request, response: Response) => {
 bookRouter.get('/rating', (request: Request, response: Response) => {
     const { minRating } = request.query; // Get the minimum rating from query parameters
 
-    if (!minRating || isNaN(parseFloat(minRating))) {
-        return response.status(400).send({ message: 'Invalid or missing minRating parameter' });
+    if (!minRating || isNaN(parseFloat(minRating as string))) {
+        return response
+            .status(400)
+            .send({ message: 'Invalid or missing minRating parameter' });
     }
 
     const theQuery = `
@@ -349,7 +354,9 @@ bookRouter.get('/rating', (request: Request, response: Response) => {
                     entries: result.rows.map(createInterface),
                 });
             } else {
-                response.status(404).send({ message: 'No books found with the specified rating' });
+                response.status(404).send({
+                    message: 'No books found with the specified rating',
+                });
             }
         })
         .catch((error) => {
@@ -386,24 +393,26 @@ bookRouter.get('/rating', (request: Request, response: Response) => {
  */
 bookRouter.get('/publication', (request: Request, response: Response) => {
     const { year } = request.query;
-    if (!year || isNaN(parseInt(year))) {
-        return response.status(400).send({ message: 'Invalid or missing year parameter' });
+    if (!year || isNaN(parseInt(year as string))) {
+        return response
+            .status(400)
+            .send({ message: 'Invalid or missing year parameter' });
     }
 
-    const theQuery = 
+    const theQuery =
         'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books WHERE publication_year = $1';
-    
 
     pool.query(theQuery, [`%${year}%`])
         .then((result) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
-                    entries: result.rows.map(createInterface)
-                });  
+                    entries: result.rows.map(createInterface),
+                });
             } else {
-                response.status(404).send({ message: 'Book not found with that year' });  //No book found in database
+                response
+                    .status(404)
+                    .send({ message: 'Book not found with that year' }); //No book found in database
             }
-            
         })
         .catch((error) => {
             //log the error
@@ -839,12 +848,12 @@ bookRouter.put(
 /**
  * @api {delete} /book Delete a book by ISBN
  * @apiDescription Delete a book from the database by ISBN
- * 
+ *
  * @apiName DeleteBook
  * @apiGroup Book
- * 
+ *
  * @apiParam {number} isbn13 ISBN number of the book to delete
- * 
+ *
  * @apiSuccess (Success 200) {String} message "Book deleted successfully"
  * @apiError (404) {String} message "Book not found"
  * @apiError (500) {String} message "Internal server error - contact support"
@@ -854,7 +863,7 @@ bookRouter.delete('/', (request: Request, response: Response) => {
 
     if (!isbn13) {
         return response.status(400).send({
-            message: 'ISBN number is required'
+            message: 'ISBN number is required',
         });
     }
 
@@ -864,11 +873,11 @@ bookRouter.delete('/', (request: Request, response: Response) => {
         .then((result) => {
             if (result.rowCount > 0) {
                 response.status(200).send({
-                    message: 'Book deleted successfully'
+                    message: 'Book deleted successfully',
                 });
             } else {
                 response.status(404).send({
-                    message: 'Book not found'
+                    message: 'Book not found',
                 });
             }
         })
@@ -876,11 +885,10 @@ bookRouter.delete('/', (request: Request, response: Response) => {
             console.error('DB Query error on DELETE');
             console.error(error);
             response.status(500).send({
-                message: 'Internal server error - contact support'
+                message: 'Internal server error - contact support',
             });
         });
 });
-
 
 // "return" the router
 export { bookRouter };
