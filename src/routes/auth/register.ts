@@ -1,5 +1,13 @@
 // express is the framework we're going to use to handle requests
 import express, { Request, Response, Router, NextFunction } from 'express';
+// We want to import our middleware functions defined elsewhere
+import {
+    emailMiddlewareCheck,
+    passwordMiddlewareCheck,
+    phoneMiddlewareCheck,
+    roleMiddlewareCheck,
+    parametersMiddlewareCheck,
+} from '../../core/middleware/verificationChecks';
 
 import jwt from 'jsonwebtoken';
 
@@ -7,14 +15,10 @@ const key = {
     secret: process.env.JSON_WEB_TOKEN,
 };
 
-import {
-    pool,
-    validationFunctions,
-    credentialingFunctions,
-} from '../../core/utilities';
+import { pool, credentialingFunctions } from '../../core/utilities';
 
-const isStringProvided = validationFunctions.isStringProvided;
-const isNumberProvided = validationFunctions.isNumberProvided;
+// const isStringProvided = validationFunctions.isStringProvided;
+// const isNumberProvided = validationFunctions.isNumberProvided;
 const generateHash = credentialingFunctions.generateHash;
 const generateSalt = credentialingFunctions.generateSalt;
 
@@ -24,49 +28,19 @@ export interface IUserRequest extends Request {
     id: number;
 }
 
-// Add more/your own password validation here. The *rules* must be documented
-// and the client-side validation should match these rules.
-const isValidPassword = (password: string): boolean =>
-    isStringProvided(password) && password.length > 7;
-
-// Add more/your own phone number validation here. The *rules* must be documented
-// and the client-side validation should match these rules.
-const isValidPhone = (phone: string): boolean =>
-    isStringProvided(phone) && phone.length >= 10;
-
-// Add more/your own role validation here. The *rules* must be documented
-// and the client-side validation should match these rules.
-const isValidRole = (priority: string): boolean =>
-    validationFunctions.isNumberProvided(priority) &&
-    parseInt(priority) >= 1 &&
-    parseInt(priority) <= 5;
-
-// Add more/your own email validation here. The *rules* must be documented
-// and the client-side validation should match these rules.
-const isValidEmail = (email: string): boolean =>
-    isStringProvided(email) && email.includes('@');
-
-// middleware functions may be defined elsewhere!
-const emailMiddlewareCheck = (
-    request: Request,
-    response: Response,
-    next: NextFunction
-) => {
-    if (isValidEmail(request.body.email)) {
-        next();
-    } else {
-        response.status(400).send({
-            message:
-                'Invalid or missing email  - please refer to documentation',
-        });
-    }
-};
-
 /**
  * @api {post} /register Request to register a user
  *
- * @apiDescription Document this route. !**Document the password rules here**!
- * !**Document the role rules here**!
+ * @apiDescription  This route is used to register a new user.
+ *                  The user must provide a unique email and username.
+ *                  The password must be at least 8 characters long, and contain at least one special character and one number.
+ *                  The phone number must be a valid phone number.
+ *                  The role must be a number between 1 and 5.
+ *
+ * @apiUse EmailValidation
+ * @apiUse PasswordValidation
+ * @apiUse PhoneValidation
+ * @apiUse RoleValidation
  *
  * @apiName PostAuth
  * @apiGroup Auth
@@ -93,57 +67,15 @@ const emailMiddlewareCheck = (
  */
 registerRouter.post(
     '/register',
-    emailMiddlewareCheck, // these middleware functions may be defined elsewhere!
-    (request: Request, response: Response, next: NextFunction) => {
-        //Verify that the caller supplied all the parameters
-        //In js, empty strings or null values evaluate to false
-        if (
-            isStringProvided(request.body.firstname) &&
-            isStringProvided(request.body.lastname) &&
-            isStringProvided(request.body.username)
-        ) {
-            next();
-        } else {
-            response.status(400).send({
-                message: 'Missing required information',
-            });
-        }
-    },
-    (request: Request, response: Response, next: NextFunction) => {
-        if (isValidPhone(request.body.phone)) {
-            next();
-            return;
-        } else {
-            response.status(400).send({
-                message:
-                    'Invalid or missing phone number  - please refer to documentation',
-            });
-            return;
-        }
-    },
-    (request: Request, response: Response, next: NextFunction) => {
-        if (isValidPassword(request.body.password)) {
-            next();
-        } else {
-            response.status(400).send({
-                message:
-                    'Invalid or missing password  - please refer to documentation',
-            });
-        }
-    },
-    (request: Request, response: Response, next: NextFunction) => {
-        if (isValidRole(request.body.role)) {
-            next();
-        } else {
-            response.status(400).send({
-                message:
-                    'Invalid or missing role  - please refer to documentation',
-            });
-        }
-    },
+    // We use these middleware checks defined in verificationChecks.ts to check all our user info
+    emailMiddlewareCheck,
+    passwordMiddlewareCheck,
+    phoneMiddlewareCheck,
+    roleMiddlewareCheck,
+    parametersMiddlewareCheck,
     (request: IUserRequest, response: Response, next: NextFunction) => {
         const theQuery =
-            'INSERT INTO Account(firstname, lastname, username, email, phone, create_date, account_role) VALUES ($1, $2, $3, $4, $5, NOW(), $6) RETURNING account_id';
+            'INSERT INTO Account(firstname, lastname, username, email, phone, account_role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING account_id';
         const values = [
             request.body.firstname,
             request.body.lastname,
