@@ -497,6 +497,74 @@ bookRouter.put(
                 response.status(500).send({
                     message: 'Server error - contact support',
                     error: error.message,
+            .then((result) => {
+                const theQuery =
+                    'INSERT INTO BOOKS(id, isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *';
+                let count: number =
+                    parseInt(request.body.rating_1_star) +
+                    parseInt(request.body.rating_2_star) +
+                    parseInt(request.body.rating_3_star) +
+                    parseInt(request.body.rating_4_star) +
+                    parseInt(request.body.rating_5_star);
+                let avg: number =
+                    (parseInt(request.body.rating_1_star) +
+                        parseInt(request.body.rating_2_star) * 2 +
+                        parseInt(request.body.rating_3_star) * 3 +
+                        parseInt(request.body.rating_4_star) * 4 +
+                        parseInt(request.body.rating_5_star) * 5) /
+                    count;
+                const values = [
+                    parseInt(result.rows[0].max) + 1,
+                    request.body.isbn13,
+                    request.body.authors,
+                    request.body.publication_year,
+                    request.body.original_title,
+                    request.body.title,
+                    avg,
+                    count,
+                    request.body.rating_1_star,
+                    request.body.rating_2_star,
+                    request.body.rating_3_star,
+                    request.body.rating_4_star,
+                    request.body.rating_5_star,
+                    request.body.image_url,
+                    request.body.image_small_url,
+                ];
+
+                pool.query(theQuery, values)
+                    .then((result) => {
+                        // result.rows array are the records returned from the SQL statement.
+                        // An INSERT statement will return a single row, the row that was inserted.
+                        response.status(201).send({
+                            entry: createInterface(result.rows[0]),
+                        });
+                    })
+                    .catch((error) => {
+                        if (
+                            error.detail != undefined &&
+                            (error.detail as string).endsWith('already exists.')
+                        ) {
+                            console.error('Name exists');
+                            response.status(400).send({
+                                message: 'Name exists',
+                            });
+                        } else {
+                            //log the error
+                            console.error('DB Query error on POST');
+                            console.error(error);
+                            response.status(500).send({
+                                message: 'server error - contact support 2',
+                                cl: result.rows[0].count + 1,
+                            });
+                        }
+                    });
+            })
+            .catch((error) => {
+                console.error('DB Query error on POST, Count');
+                console.error(error);
+                response.status(500).send({
+                    message: 'server error - contact support 3',
+                    cl: 'failed on count',
                 });
             });
     }
@@ -581,6 +649,52 @@ bookRouter.put(
         }
     }
 );
+
+/**
+ * @api {delete} /book Delete a book by ISBN
+ * @apiDescription Delete a book from the database by ISBN
+ * 
+ * @apiName DeleteBook
+ * @apiGroup Book
+ * 
+ * @apiParam {number} isbn13 ISBN number of the book to delete
+ * 
+ * @apiSuccess (Success 200) {String} message "Book deleted successfully"
+ * @apiError (404) {String} message "Book not found"
+ * @apiError (500) {String} message "Internal server error - contact support"
+ */
+bookRouter.delete('/', (request: Request, response: Response) => {
+    const { isbn13 } = request.body;
+
+    if (!isbn13) {
+        return response.status(400).send({
+            message: 'ISBN number is required'
+        });
+    }
+
+    const deleteQuery = 'DELETE FROM books WHERE isbn13 = $1';
+
+    pool.query(deleteQuery, [isbn13])
+        .then((result) => {
+            if (result.rowCount > 0) {
+                response.status(200).send({
+                    message: 'Book deleted successfully'
+                });
+            } else {
+                response.status(404).send({
+                    message: 'Book not found'
+                });
+            }
+        })
+        .catch((error) => {
+            console.error('DB Query error on DELETE');
+            console.error(error);
+            response.status(500).send({
+                message: 'Internal server error - contact support'
+            });
+        });
+});
+
 
 // "return" the router
 export { bookRouter };
