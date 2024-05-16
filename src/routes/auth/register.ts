@@ -15,11 +15,7 @@ const key = {
     secret: process.env.JSON_WEB_TOKEN,
 };
 
-import {
-    pool,
-    validationFunctions,
-    credentialingFunctions,
-} from '../../core/utilities';
+import { pool, credentialingFunctions } from '../../core/utilities';
 
 // const isStringProvided = validationFunctions.isStringProvided;
 // const isNumberProvided = validationFunctions.isNumberProvided;
@@ -28,64 +24,9 @@ const generateSalt = credentialingFunctions.generateSalt;
 
 const registerRouter: Router = express.Router();
 
-// // Here we will define the regex to validate our different user data
-// const emailRegex: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// const phoneRegex: RegExp = /^\(?\d{3}\)?[-. ]?\d{3}[-. ]?\d{4}$/;
-// const passwordRegex: RegExp =
-//     /^(?=.*[0-9])(?=.*[^a-zA-Z0-9])[a-zA-Z0-9\s!@#$%^&*()-_+=?.,;:{}[\]]{8,}$/;
-
 export interface IUserRequest extends Request {
     id: number;
 }
-
-// /**
-//  * @apiDefine PasswordValidation
-//  * @apiParam {String} password The user's password. This must be a string containing at least 8 characters, with at least one special character and one number.
-//  *                    This password can contain any combination of any amount of special characters (including spaces), numbers, and letters once the other requirements are met.
-//  */
-// const isValidPassword = (password: string): boolean =>
-//     isStringProvided(password) && passwordRegex.test(password);
-
-// /**
-//  * @apiDefine PhoneValidation
-//  * @apiParam {String} phone The user's phone number. This must be a valid phone number containing 10 numbers.
-//  *                                                   The phone number can be in the format of 123-456-7890, 123.456.7890, 1234567890, (123) 456-7890, etc.
-//  */
-// const isValidPhone = (phone: string): boolean =>
-//     isStringProvided(phone) && phoneRegex.test(phone);
-
-// /**
-//  * @apiDefine RoleValidation
-//  * @apiParam {String} role The user's role. This must be a number between 1 and 5.
-//  */
-// const isValidRole = (priority: string): boolean =>
-//     validationFunctions.isNumberProvided(priority) &&
-//     parseInt(priority) >= 1 &&
-//     parseInt(priority) <= 5;
-
-// /**
-//  * @apiDefine EmailValidation
-//  * @apiParam {String} email The user's email. This must be a valid email address in the format: [name]@[domain].[top-level domain].
-//  */
-// const isValidEmail = (email: string): boolean =>
-//     // Here we are using some regex to just check if the email follows regular email format [somename]@[domain].[something]
-//     isStringProvided(email) && emailRegex.test(email);
-
-// middleware functions may be defined elsewhere!
-// const emailMiddlewareCheck = (
-//     request: Request,
-//     response: Response,
-//     next: NextFunction
-// ) => {
-//     if (isValidEmail(request.body.email)) {
-//         next();
-//     } else {
-//         response.status(400).send({
-//             message:
-//                 'Invalid or missing email  - please refer to documentation',
-//         });
-//     }
-// };
 
 /**
  * @api {post} /register Request to register a user
@@ -134,7 +75,7 @@ registerRouter.post(
     parametersMiddlewareCheck,
     (request: IUserRequest, response: Response, next: NextFunction) => {
         const theQuery =
-            'INSERT INTO Account(firstname, lastname, username, email, phone, create_date, account_role) VALUES ($1, $2, $3, $4, $5, NOW(), $6) RETURNING account_id';
+            'INSERT INTO Account(firstname, lastname, username, email, phone, account_role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING account_id';
         const values = [
             request.body.firstname,
             request.body.lastname,
