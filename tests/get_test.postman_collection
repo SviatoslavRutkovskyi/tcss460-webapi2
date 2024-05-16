@@ -1,0 +1,339 @@
+{
+	"info": {
+		"_postman_id": "9698f468-de4f-4dc9-b4e6-e5562b6b85e1",
+		"name": "tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17915524"
+	},
+	"item": [
+		{
+			"name": "{{base.url}}/books/isbn",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"// if no books found\r",
+							"pm.test(\"status code is 404\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base.url}}/books/isbn?id=0012500440366",
+					"host": [
+						"{{base.url}}"
+					],
+					"path": [
+						"books",
+						"isbn"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "9780743273560",
+							"description": "A working query",
+							"disabled": true
+						},
+						{
+							"key": "id",
+							"value": "0012500440366",
+							"description": "Should be a non-working isbn"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{base_url}}/books/author",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"// If invalid author\r",
+							"pm.test(\"status code is 404\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/books/author?authorName=J.K. Rowling",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"books",
+						"author"
+					],
+					"query": [
+						{
+							"key": "authorName",
+							"value": "J.K. Rowling",
+							"description": "working author in database"
+						},
+						{
+							"key": "authorName",
+							"value": "Jessica Audifred",
+							"description": "A non-working value",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{base.url}}/books/publication",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test to verify that the status code is 200",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// A dynamic check for the year; otherwise FAILS",
+							"pm.test(\"Response contains the requested year\", function () {",
+							"    const requestYear = pm.request.url.query.get(\"year\");",
+							"    const jsonData = pm.response.json().entries;",
+							"    ",
+							"    jsonData.forEach(book => {",
+							"        pm.expect(book.publication).to.eql(parseInt(requestYear));",
+							"    });",
+							"});",
+							"",
+							"// fails if a valid year gets passed",
+							"pm.test(\"Status code is 404\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base.url}}/books/publication?year=2001",
+					"host": [
+						"{{base.url}}"
+					],
+					"path": [
+						"books",
+						"publication"
+					],
+					"query": [
+						{
+							"key": "year",
+							"value": "2001",
+							"description": "A successful query for year"
+						},
+						{
+							"key": "year",
+							"value": "-2000",
+							"description": "A failing query for year",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{base.url}}/books/all",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response time is reasonable\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(2000); // Response time should be less than 2000 ms",
+							"});",
+							"",
+							"",
+							"pm.test(\"Pagination parameters are present\", function () {",
+							"    let jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('currentPage');",
+							"    pm.expect(jsonData).to.have.property('pageSize');",
+							"    pm.expect(jsonData).to.have.property('entries');",
+							"    pm.expect(jsonData.entries).to.be.an('array');",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base.url}}/books/all",
+					"host": [
+						"{{base.url}}"
+					],
+					"path": [
+						"books",
+						"all"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{base.url}}/books/rating",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response includes essential book information\", function () {",
+							"    let jsonData = pm.response.json().entries;",
+							"    if (jsonData.length > 0) {",
+							"        pm.expect(jsonData[0]).to.have.keys('isbn13', 'authors', 'publication', 'original_title', 'title', 'ratings', 'icons');",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Handles no matches appropriately\", function () {",
+							"    let jsonData = pm.response.json().entries;",
+							"    if (jsonData.length === 0) {",
+							"        pm.expect(pm.response.text()).to.include('No books found with the specified rating');",
+							"    }",
+							"});",
+							"",
+							"",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base.url}}/books/rating?minRating=4.08",
+					"host": [
+						"{{base.url}}"
+					],
+					"path": [
+						"books",
+						"rating"
+					],
+					"query": [
+						{
+							"key": "minRating",
+							"value": "4.08"
+						},
+						{
+							"key": "minRating",
+							"value": "-2",
+							"description": "A illegal arguement",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{base.url}}/books/title",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response time is within acceptable limits\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(2000); // Adjust based on expected performance standards",
+							"});",
+							"",
+							"// Fails if correct title gets passed",
+							"pm.test(\"Status code is 404\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base.url}}/books/title?titleName=The Fault in Our Stars",
+					"host": [
+						"{{base.url}}"
+					],
+					"path": [
+						"books",
+						"title"
+					],
+					"query": [
+						{
+							"key": "titleName",
+							"value": "The Fault in Our Stars",
+							"description": "A working query"
+						},
+						{
+							"key": "titleName",
+							"value": "Legendary Legend of Legends",
+							"description": "A failing query",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

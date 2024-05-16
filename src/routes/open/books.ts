@@ -282,8 +282,14 @@ bookRouter.get('/author', (request: Request, response: Response) => {
  */
 bookRouter.get('/title', (request: Request, response: Response) => {
     const { titleName } = request.query;
-    const theQuery =
-        'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books WHERE original_title OR title ILIKE $1';
+    if (!titleName) {
+        return response.status(400).send({ message: 'Missing title parameter' });
+    }
+
+    const theQuery = `
+        SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url 
+        FROM books 
+        WHERE original_title ILIKE $1 OR title ILIKE $1`;
 
     pool.query(theQuery, [`%${titleName}%`])
         .then((result) => {
@@ -292,20 +298,17 @@ bookRouter.get('/title', (request: Request, response: Response) => {
                     entries: result.rows.map(createInterface),
                 });
             } else {
-                response
-                    .status(404)
-                    .send({ message: 'Book not found with that title' });
+                response.status(404).send({ message: 'Book not found with that title' });
             }
         })
         .catch((error) => {
-            //log the error
-            console.error('DB Query error on GET title');
-            console.error(error);
+            console.error('DB Query error on GET title:', error);
             response.status(500).send({
-                message: 'server error - contact support',
+                message: 'Server error - contact support',
             });
         });
 });
+
 
 /**
  * @api {get} /book/rating get all books with a specific rating equal to the value and higher.
@@ -333,8 +336,9 @@ bookRouter.get('/title', (request: Request, response: Response) => {
  */
 bookRouter.get('/rating', (request: Request, response: Response) => {
     const { minRating } = request.query; // Get the minimum rating from query parameters
+    const ratingFloat = parseFloat(minRating as string); // Parse as float for ratings that could be decimals
 
-    if (!minRating || isNaN(parseFloat(minRating as string))) {
+    if (isNaN(ratingFloat)) { // Check if the parsed rating is not a number
         return response
             .status(400)
             .send({ message: 'Invalid or missing minRating parameter' });
@@ -343,11 +347,11 @@ bookRouter.get('/rating', (request: Request, response: Response) => {
     const theQuery = `
         SELECT isbn13, authors, publication_year, original_title, title,
                rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star,
-               image_url, image_small_url, average_rating
+               image_url, image_small_url, rating_avg
         FROM books
-        WHERE average_rating >= $1`;
+        WHERE rating_avg >= $1`; // Use parameterized query to avoid SQL injection
 
-    pool.query(theQuery, [minRating])
+    pool.query(theQuery, [ratingFloat]) // Use the parsed float in the query
         .then((result) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
@@ -366,6 +370,7 @@ bookRouter.get('/rating', (request: Request, response: Response) => {
             });
         });
 });
+
 
 /**
  * @api {get} /book/publication get all books with a specific publication year.
@@ -393,7 +398,8 @@ bookRouter.get('/rating', (request: Request, response: Response) => {
  */
 bookRouter.get('/publication', (request: Request, response: Response) => {
     const { year } = request.query;
-    if (!year || isNaN(parseInt(year as string))) {
+    const yearInt = parseInt(year as string, 10); // Ensure year is an integer
+    if (isNaN(yearInt)) {
         return response
             .status(400)
             .send({ message: 'Invalid or missing year parameter' });
@@ -402,7 +408,7 @@ bookRouter.get('/publication', (request: Request, response: Response) => {
     const theQuery =
         'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books WHERE publication_year = $1';
 
-    pool.query(theQuery, [`%${year}%`])
+    pool.query(theQuery, [yearInt])
         .then((result) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
@@ -411,18 +417,19 @@ bookRouter.get('/publication', (request: Request, response: Response) => {
             } else {
                 response
                     .status(404)
-                    .send({ message: 'Book not found with that year' }); //No book found in database
+                    .send({ message: 'Book not found with that year' }); // No book found in database
             }
         })
         .catch((error) => {
-            //log the error
+            // Log the error
             console.error('DB Query error on GET publication');
             console.error(error);
             response.status(500).send({
-                message: 'server error - contact support',
+                message: 'Server error - contact support',
             });
         });
 });
+
 
 bookRouter.post(
     '/',
