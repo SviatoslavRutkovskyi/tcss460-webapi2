@@ -405,5 +405,51 @@ bookRouter.post(
     }
 );
 
+/**
+ * @api {delete} /book Delete a book by ISBN
+ * @apiDescription Delete a book from the database by ISBN
+ * 
+ * @apiName DeleteBook
+ * @apiGroup Book
+ * 
+ * @apiParam {number} isbn13 ISBN number of the book to delete
+ * 
+ * @apiSuccess (Success 200) {String} message "Book deleted successfully"
+ * @apiError (404) {String} message "Book not found"
+ * @apiError (500) {String} message "Internal server error - contact support"
+ */
+bookRouter.delete('/', (request: Request, response: Response) => {
+    const { isbn13 } = request.body;
+
+    if (!isbn13) {
+        return response.status(400).send({
+            message: 'ISBN number is required'
+        });
+    }
+
+    const deleteQuery = 'DELETE FROM books WHERE isbn13 = $1';
+
+    pool.query(deleteQuery, [isbn13])
+        .then((result) => {
+            if (result.rowCount > 0) {
+                response.status(200).send({
+                    message: 'Book deleted successfully'
+                });
+            } else {
+                response.status(404).send({
+                    message: 'Book not found'
+                });
+            }
+        })
+        .catch((error) => {
+            console.error('DB Query error on DELETE');
+            console.error(error);
+            response.status(500).send({
+                message: 'Internal server error - contact support'
+            });
+        });
+});
+
+
 // "return" the router
 export { bookRouter };
