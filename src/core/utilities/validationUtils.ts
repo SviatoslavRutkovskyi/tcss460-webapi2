@@ -75,7 +75,7 @@ const isValidRole = (priority: string): boolean =>
 
 /**
  * @apiDefine EmailValidation
- * @apiParam {String} email The user's email. This must be a valid email address in the format: [name]@[domain].[top-level domain].
+ * @apiParam {String} email The user's email. This must be a valid email address in the format: name@domain.top-level domain
  */
 const isValidEmail = (email: string): boolean =>
     // Here we are using some regex to just check if the email follows regular email format [somename]@[domain].[something]
