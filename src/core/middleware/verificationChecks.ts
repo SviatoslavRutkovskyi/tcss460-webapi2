@@ -47,7 +47,7 @@ export const passwordMiddlewareCheck = (
     } else {
         response.status(400).send({
             message:
-                'Invalid or missing password - please refer to documentation',
+                'Invalid or missing password  - please refer to documentation',
         });
     }
 };
@@ -62,7 +62,7 @@ export const phoneMiddlewareCheck = (
     } else {
         response.status(400).send({
             message:
-                'Invalid or missing phone number - please refer to documentation',
+                'Invalid or missing phone number  - please refer to documentation',
         });
     }
 };
@@ -76,7 +76,7 @@ export const roleMiddlewareCheck = (
         next();
     } else {
         response.status(400).send({
-            message: 'Invalid or missing role - please refer to documentation',
+            message: 'Invalid or missing role  - please refer to documentation',
         });
     }
 };
@@ -97,6 +97,23 @@ export const parametersMiddlewareCheck = (
     } else {
         response.status(400).send({
             message: 'Missing required information',
+        });
+    }
+};
+
+export const loginParametersMiddlewareCheck = (
+    request: Request,
+    response: Response,
+    next: NextFunction
+) => {
+    if (
+        isStringProvided(request.body.username) &&
+        isStringProvided(request.body.password)
+    ) {
+        next();
+    } else {
+        response.status(400).send({
+            message: 'Missing password/username or both',
         });
     }
 };

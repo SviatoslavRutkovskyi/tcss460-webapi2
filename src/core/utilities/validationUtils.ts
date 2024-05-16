@@ -49,24 +49,28 @@ const passwordRegex: RegExp =
     /^(?=.*[0-9])(?=.*[^a-zA-Z0-9])[a-zA-Z0-9\s!@#$%^&*()-_+=?.,;:{}[\]]{8,}$/;
 
 /**
- * @apiDefine PasswordValidation
- * @apiParam {String} password The user's password. This must be a string containing at least 8 characters, with at least one special character and one number.
- *                    This password can contain any combination of any amount of special characters (including spaces), numbers, and letters once the other requirements are met.
+ * The password of a user must be at least 8 characters long, and contain at least one special character and one number.
+ *
+ * @param password The password of the user.
+ * @returns Whether the user password is valid.
  */
 const isValidPassword = (password: string): boolean =>
     isStringProvided(password) && passwordRegex.test(password);
 
 /**
- * @apiDefine PhoneValidation
- * @apiParam {String} phone The user's phone number. This must be a valid phone number containing 10 numbers.
- *                                                   The phone number can be in the format of 123-456-7890, 123.456.7890, 1234567890, (123) 456-7890, etc.
+ * The phone number of a user must be a valid number. This can be in any possible format that is valid for a phone number.
+ *
+ * @param phone The phone number of the user.
+ * @returns Whether the user has a valid phone number.
  */
 const isValidPhone = (phone: string): boolean =>
     isStringProvided(phone) && phoneRegex.test(phone);
 
 /**
- * @apiDefine RoleValidation
- * @apiParam {String} role The user's role. This must be a number between 1 and 5.
+ * The role of a user must be between 1-5. This is used to determine the priority of the user in the system.
+ *
+ * @param priority The number dictating the role of the user (i.e., how much priority a user gets in the system)
+ * @returns Whether the user has a valid role.
  */
 const isValidRole = (priority: string): boolean =>
     validationFunctions.isNumberProvided(priority) &&
@@ -74,8 +78,10 @@ const isValidRole = (priority: string): boolean =>
     parseInt(priority) <= 5;
 
 /**
- * @apiDefine EmailValidation
- * @apiParam {String} email The user's email. This must be a valid email address in the format: [name]@[domain].[top-level domain].
+ * The email of a user must be a valid email address in the format: name@domain.topleveldomain
+ *
+ * @param email The email of the user.
+ * @returns Whether the user has a valid email.
  */
 const isValidEmail = (email: string): boolean =>
     // Here we are using some regex to just check if the email follows regular email format [somename]@[domain].[something]

@@ -1,13 +1,12 @@
 // express is the framework we're going to use to handle requests
-import express, { Request, Response, Router, NextFunction } from 'express';
+import express, { Request, Response, Router } from 'express';
 
 import jwt from 'jsonwebtoken';
 
-import {
-    pool,
-    validationFunctions,
-    credentialingFunctions,
-} from '../../core/utilities';
+import { pool, credentialingFunctions } from '../../core/utilities';
+
+// We want to import our middleware functions defined elsewhere
+import { loginParametersMiddlewareCheck } from '../../core/middleware/verificationChecks';
 
 export interface Auth {
     email: string;
@@ -18,7 +17,6 @@ export interface AuthRequest extends Request {
     auth: Auth;
 }
 
-const isStringProvided = validationFunctions.isStringProvided;
 const generateHash = credentialingFunctions.generateHash;
 
 const signinRouter: Router = express.Router();
@@ -29,40 +27,30 @@ const key = {
 
 /**
  * @api {post} /login Request to sign a user in the system
+ *
+ * @apiDescription This route is used to sign a user in the system. The user must provide a valid username and password.
+ *
  * @apiName GetAuth
  * @apiGroup Auth
  *
  * @apiHeader {String} authorization "username:password" uses Basic Auth
  *
- * @apiSuccess {String} accessToken JSON Web Token
- * @apiSuccess {number} id unique user id
-
- * @apiError (400: Missing Authorization Header) {String} message "Missing Authorization Header"
- * @apiError (400: Malformed Authorization Header) {String} message "Malformed Authorization Header"
+ * @apiSuccess (Success 201) {String} accessToken JSON Web Token
+ * @apiSuccess (Success 201) {number} id unique user id
+ *
+ * @apiError (400: Missing Parameters) {String} message "Missing password/username or both"
  * @apiError (404: User Not Found) {String} message "User not found"
  * @apiError (400: Invalid Credentials) {String} message "Credentials did not match"
- *
  */
 signinRouter.post(
     '/login',
-    (request: AuthRequest, response: Response, next: NextFunction) => {
-        if (
-            isStringProvided(request.body.email) &&
-            isStringProvided(request.body.password)
-        ) {
-            next();
-        } else {
-            response.status(400).send({
-                message: 'Missing required information',
-            });
-        }
-    },
+    loginParametersMiddlewareCheck,
     (request: AuthRequest, response: Response) => {
-        const theQuery = `SELECT salted_hash, salt, Account_Credential.account_id, account.email, account.firstname, account.lastname, account.phone, account.username, account.account_role, account.create_date FROM Account_Credential
+        const theQuery = `SELECT salted_hash, salt, Account_Credential.account_id, account.email, account.firstname, account.lastname, account.phone, account.username, account.account_role FROM Account_Credential
                       INNER JOIN Account ON
                       Account_Credential.account_id=Account.account_id 
-                      WHERE Account.email=$1`;
-        const values = [request.body.email];
+                      WHERE Account.username=$1`;
+        const values = [request.body.username];
         pool.query(theQuery, values)
             .then((result) => {
                 if (result.rowCount == 0) {
@@ -108,7 +96,7 @@ signinRouter.post(
                         }
                     );
                     //package and send the results
-                    response.json({
+                    response.status(201).json({
                         accessToken,
                         id: result.rows[0].account_id,
                     });
