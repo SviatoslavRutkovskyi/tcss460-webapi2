@@ -226,8 +226,8 @@ bookRouter.get('/isbn', (request: Request, response: Response) => {
 }"
  *
  * @apiUse JSONError
- * (404) Books not found by that author
- * (505) Connectivity issue to database or error with SQL query
+ * @apiError (404) Books not found by that author
+ * @apiError (505) Connectivity issue to database or error with SQL query
  */
 bookRouter.get('/author', (request: Request, response: Response) => {
     const { authorName } = request.query;
@@ -277,13 +277,15 @@ bookRouter.get('/author', (request: Request, response: Response) => {
 }"
  *
  * @apiUse JSONError
- * (404) Books not found by that title
- * (505) Connectivity issue to database or error with SQL query
+ * @apiError (404) Books not found by that title
+ * @apiError (505) Connectivity issue to database or error with SQL query
  */
 bookRouter.get('/title', (request: Request, response: Response) => {
     const { titleName } = request.query;
     if (!titleName) {
-        return response.status(400).send({ message: 'Missing title parameter' });
+        return response
+            .status(400)
+            .send({ message: 'Missing title parameter' });
     }
 
     const theQuery = `
@@ -298,7 +300,9 @@ bookRouter.get('/title', (request: Request, response: Response) => {
                     entries: result.rows.map(createInterface),
                 });
             } else {
-                response.status(404).send({ message: 'Book not found with that title' });
+                response
+                    .status(404)
+                    .send({ message: 'Book not found with that title' });
             }
         })
         .catch((error) => {
@@ -308,7 +312,6 @@ bookRouter.get('/title', (request: Request, response: Response) => {
             });
         });
 });
-
 
 /**
  * @api {get} /book/rating get all books with a specific rating equal to the value and higher.
@@ -331,14 +334,15 @@ bookRouter.get('/title', (request: Request, response: Response) => {
 }"
  *
  * @apiUse JSONError
- * (404) the minRating isn't validated/not a valid number.
- * (505) Connectivity issue to database or error with SQL query
+ * @apiError (404) the minRating isn't validated/not a valid number.
+ * @apiError (505) Connectivity issue to database or error with SQL query
  */
 bookRouter.get('/rating', (request: Request, response: Response) => {
     const { minRating } = request.query; // Get the minimum rating from query parameters
     const ratingFloat = parseFloat(minRating as string); // Parse as float for ratings that could be decimals
 
-    if (isNaN(ratingFloat)) { // Check if the parsed rating is not a number
+    if (isNaN(ratingFloat)) {
+        // Check if the parsed rating is not a number
         return response
             .status(400)
             .send({ message: 'Invalid or missing minRating parameter' });
@@ -371,7 +375,6 @@ bookRouter.get('/rating', (request: Request, response: Response) => {
         });
 });
 
-
 /**
  * @api {get} /book/publication get all books with a specific publication year.
  *
@@ -393,8 +396,8 @@ bookRouter.get('/rating', (request: Request, response: Response) => {
 }"
  *
  * @apiUse JSONError
- * (404) Books not found by that year
- * (505) Connectivity issue to database or error with SQL query
+ * @apiError (404) Books not found by that year
+ * @apiError (505) Connectivity issue to database or error with SQL query
  */
 bookRouter.get('/publication', (request: Request, response: Response) => {
     const { year } = request.query;
@@ -429,7 +432,6 @@ bookRouter.get('/publication', (request: Request, response: Response) => {
             });
         });
 });
-
 
 bookRouter.post(
     '/',
@@ -853,46 +855,90 @@ bookRouter.put(
 );
 
 /**
- * @api {delete} /book Delete a book by ISBN
- * @apiDescription Delete a book from the database by ISBN
+ * @api {delete} /book/:isbn Delete a book by ISBN
  *
- * @apiName DeleteBook
+ * @apiDescription Delete a book from the database based on its ISBN.
+ *
+ * @apiName DeleteBookByISBN
  * @apiGroup Book
  *
- * @apiParam {number} isbn13 ISBN number of the book to delete
+ * @apiParam {String} isbn The ISBN of the book to delete.
  *
- * @apiSuccess (Success 200) {String} message "Book deleted successfully"
- * @apiError (404) {String} message "Book not found"
- * @apiError (500) {String} message "Internal server error - contact support"
+ * @apiSuccess (Success 200) {String} message "Book deleted successfully."
+ *
+ * @apiError (404) {String} message "Book not found."
+ * @apiError (500) {String} message "Server error - contact support."
  */
-bookRouter.delete('/', (request: Request, response: Response) => {
-    const { isbn13 } = request.body;
+bookRouter.delete('/isbn/:isbn', (request: Request, response: Response) => {
+    const { isbn } = request.params;
+    const theQuery = 'DELETE FROM books WHERE isbn13 = $1 RETURNING *';
 
-    if (!isbn13) {
-        return response.status(400).send({
-            message: 'ISBN number is required',
-        });
+    if (!isbn) {
+        return response.status(400).send({ message: 'Missing ISBN parameter' });
     }
 
-    const deleteQuery = 'DELETE FROM books WHERE isbn13 = $1';
-
-    pool.query(deleteQuery, [isbn13])
+    pool.query(theQuery, [isbn])
         .then((result) => {
             if (result.rowCount > 0) {
                 response.status(200).send({
-                    message: 'Book deleted successfully',
+                    message: 'Book deleted successfully.',
                 });
             } else {
                 response.status(404).send({
-                    message: 'Book not found',
+                    message: 'Book not found.',
                 });
             }
         })
         .catch((error) => {
-            console.error('DB Query error on DELETE');
-            console.error(error);
+            console.error('DB Query error on DELETE /:isbn', error);
             response.status(500).send({
-                message: 'Internal server error - contact support',
+                message: 'Server error - contact support.',
+            });
+        });
+});
+
+/**
+ * @api {delete} /book/title/:title Delete a book by title
+ *
+ * @apiDescription Delete a book from the database based on its title.
+ *
+ * @apiName DeleteBookByTitle
+ * @apiGroup Book
+ *
+ * @apiParam {String} title The title of the book to delete.
+ *
+ * @apiSuccess (Success 200) {String} message "Book deleted successfully."
+ *
+ * @apiError (404) {String} message "Book not found."
+ * @apiError (500) {String} message "Server error - contact support."
+ */
+bookRouter.delete('/title/:title', (request: Request, response: Response) => {
+    const { title } = request.params;
+    const theQuery =
+        'DELETE FROM books WHERE original_title ILIKE $1 OR title ILIKE $1 RETURNING *';
+
+    if (!title) {
+        return response
+            .status(400)
+            .send({ message: 'Missing title parameter' });
+    }
+
+    pool.query(theQuery, [`%${title}%`])
+        .then((result) => {
+            if (result.rowCount > 0) {
+                response.status(200).send({
+                    message: 'Book deleted successfully.',
+                });
+            } else {
+                response.status(404).send({
+                    message: 'Book not found.',
+                });
+            }
+        })
+        .catch((error) => {
+            console.error('DB Query error on DELETE /title/:title', error);
+            response.status(500).send({
+                message: 'Server error - contact support.',
             });
         });
 });
