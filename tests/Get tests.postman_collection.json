@@ -1,26 +1,81 @@
 {
 	"info": {
-		"_postman_id": "9698f468-de4f-4dc9-b4e6-e5562b6b85e1",
-		"name": "tests",
+		"_postman_id": "5be5455f-63ba-4474-848c-ffd2f0840198",
+		"name": "Get tests",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "17915524"
+		"_exporter_id": "34355155"
 	},
 	"item": [
 		{
-			"name": "{{base.url}}/books/isbn",
+			"name": "{{base.url}}/books/isbn pass",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
+							"const response = pm.response.json();\r",
+							"\r",
 							"pm.test(\"status code is 200\", function () {\r",
 							"    pm.response.to.have.status(200);\r",
 							"});\r",
 							"\r",
+							"pm.test(\"corect isbn\", function () {\r",
+							"    pm.expect(response).to.haveOwnProperty(\"entries\");\r",
+							"    pm.expect(response.entries).to.haveOwnProperty(\"isbn13\");\r",
+							"    pm.expect(response.entries.isbn13).to.equal(\"9780743273560\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base.url}}/books/isbn?id=9780743273560",
+					"host": [
+						"{{base.url}}"
+					],
+					"path": [
+						"books",
+						"isbn"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "9780743273560",
+							"description": "A working query"
+						},
+						{
+							"key": "id",
+							"value": "0012500440366",
+							"description": "Should be a non-working isbn",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{base.url}}/books/isbn fail",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();\r",
 							"// if no books found\r",
 							"pm.test(\"status code is 404\", function () {\r",
 							"    pm.response.to.have.status(404);\r",
 							"});\r",
+							"\r",
+							"pm.test(\"Body has correct error\", () => {\r",
+							"    pm.expect(response).to.haveOwnProperty(\"message\");\r",
+							"    pm.expect(response.message).to.equal(\"Book not found\");\r",
+							"})\r",
 							""
 						],
 						"type": "text/javascript",
@@ -58,19 +113,24 @@
 			"response": []
 		},
 		{
-			"name": "{{base_url}}/books/author",
+			"name": "{{base.url}}/books/author pass",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
+							"const response = pm.response.json();\r",
+							"\r",
 							"pm.test(\"status code is 200\", function () {\r",
 							"    pm.response.to.have.status(200);\r",
 							"});\r",
 							"\r",
-							"// If invalid author\r",
-							"pm.test(\"status code is 404\", function () {\r",
-							"    pm.response.to.have.status(404);\r",
+							"pm.test(\"corect author\", function () {\r",
+							"    pm.expect(response).to.haveOwnProperty(\"entries\");\r",
+							"    pm.expect(response.entries[0]).to.haveOwnProperty(\"authors\");\r",
+							"    response.entries.forEach(book => {\r",
+							"        pm.expect(book.authors).to.include(\"J.K. Rowling\");\r",
+							"    });\r",
 							"});"
 						],
 						"type": "text/javascript",
@@ -82,9 +142,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{base_url}}/books/author?authorName=J.K. Rowling",
+					"raw": "{{base.url}}/books/author?authorName=J.K. Rowling&=",
 					"host": [
-						"{{base_url}}"
+						"{{base.url}}"
 					],
 					"path": [
 						"books",
@@ -101,6 +161,63 @@
 							"value": "Jessica Audifred",
 							"description": "A non-working value",
 							"disabled": true
+						},
+						{
+							"key": "",
+							"value": ""
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{base.url}}/books/author fail",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();\r",
+							"// if no books found\r",
+							"pm.test(\"status code is 404\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Body has correct error\", () => {\r",
+							"    pm.expect(response).to.haveOwnProperty(\"message\");\r",
+							"    pm.expect(response.message).to.equal(\"Book not found with that author(s)\");\r",
+							"})\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base.url}}/books/author?authorName=Jessica Audifred",
+					"host": [
+						"{{base.url}}"
+					],
+					"path": [
+						"books",
+						"author"
+					],
+					"query": [
+						{
+							"key": "authorName",
+							"value": "J.K. Rowling",
+							"description": "working author in database",
+							"disabled": true
+						},
+						{
+							"key": "authorName",
+							"value": "Jessica Audifred",
+							"description": "A non-working value"
 						}
 					]
 				}
@@ -129,10 +246,6 @@
 							"    });",
 							"});",
 							"",
-							"// fails if a valid year gets passed",
-							"pm.test(\"Status code is 404\", function () {",
-							"    pm.response.to.have.status(404);",
-							"});",
 							""
 						],
 						"type": "text/javascript",
@@ -163,6 +276,58 @@
 							"value": "-2000",
 							"description": "A failing query for year",
 							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{base.url}}/books/publication Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();",
+							"// fails if a valid year gets passed",
+							"pm.test(\"Status code is 404\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"pm.test(\"Body has correct error\", () => {",
+							"    pm.expect(response).to.haveOwnProperty(\"message\");",
+							"    pm.expect(response.message).to.equal(\"Book not found with that year\");",
+							"})",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base.url}}/books/publication?year=-2000",
+					"host": [
+						"{{base.url}}"
+					],
+					"path": [
+						"books",
+						"publication"
+					],
+					"query": [
+						{
+							"key": "year",
+							"value": "2001",
+							"description": "A successful query for year",
+							"disabled": true
+						},
+						{
+							"key": "year",
+							"value": "-2000",
+							"description": "A failing query for year"
 						}
 					]
 				}
@@ -279,24 +444,26 @@
 			"response": []
 		},
 		{
-			"name": "{{base.url}}/books/title",
+			"name": "{{base.url}}/books/title pass",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
+							"const response = pm.response.json();",
+							"",
+							"pm.test(\"status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
 							"});",
-							"",
-							"",
 							"pm.test(\"Response time is within acceptable limits\", function () {",
 							"    pm.expect(pm.response.responseTime).to.be.below(2000); // Adjust based on expected performance standards",
 							"});",
 							"",
-							"// Fails if correct title gets passed",
-							"pm.test(\"Status code is 404\", function () {",
-							"    pm.response.to.have.status(404);",
+							"pm.test(\"corect title\", function () {",
+							"    pm.expect(response).to.haveOwnProperty(\"entries\");",
+							"    response.entries.forEach(book => {",
+							"        pm.expect(book.title).to.include(\"The Fault in Our Stars\");",
+							"    });",
 							"});",
 							"",
 							""
@@ -321,19 +488,107 @@
 					"query": [
 						{
 							"key": "titleName",
-							"value": "The Fault in Our Stars",
-							"description": "A working query"
+							"value": "Legendary Legend of Legends",
+							"description": "A failing query",
+							"disabled": true
 						},
 						{
 							"key": "titleName",
+							"value": "The Fault in Our Stars"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{base.url}}/books/title",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();",
+							"// Fails if correct title gets passed",
+							"pm.test(\"Status code is 404\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"pm.test(\"Body has correct error\", () => {",
+							"    pm.expect(response).to.haveOwnProperty(\"message\");",
+							"    pm.expect(response.message).to.equal(\"Book not found with that title\");",
+							"})"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base.url}}/books/title?titleName=Legendary Legend of Legends",
+					"host": [
+						"{{base.url}}"
+					],
+					"path": [
+						"books",
+						"title"
+					],
+					"query": [
+						{
+							"key": "titleName",
 							"value": "Legendary Legend of Legends",
-							"description": "A failing query",
+							"description": "A failing query"
+						},
+						{
+							"key": "titleName",
+							"value": "The Fault in Our Stars",
 							"disabled": true
 						}
 					]
 				}
 			},
 			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSmV3ZWwiLCJyb2xlIjo1LCJpZCI6MzcsImlhdCI6MTcxNTkxNDczNiwiZXhwIjoxNzE3MTI0MzM2fQ.jWzM-jS8UDxmjk1YfYArerf4o8MZfMvjhL-aaxZrIzY",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base.url",
+			"value": "localhost:4000",
+			"type": "string"
 		}
 	]
 }

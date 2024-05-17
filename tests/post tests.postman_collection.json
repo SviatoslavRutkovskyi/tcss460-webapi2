@@ -1,566 +1,558 @@
 {
-	"info": {
-		"_postman_id": "f0c336c8-f549-4842-87d7-c05dd20cc3c6",
-		"name": "post tests",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "34355155"
-	},
-	"item": [
-		{
-			"name": "{{base_url}}/books/pass",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"const response = pm.response.json();\r",
-							"\r",
-							"pm.test(\"Response status should be 200\", () => {\r",
-							"    pm.response.to.have.status(201);\r",
-							"})\r",
-							"\r",
-							"pm.test(\"Body has the field entry\", () => {\r",
-							"    pm.expect(response).to.haveOwnProperty(\"entry\");\r",
-							"    console.log(response.entry.length);\r",
-							"})\r",
-							"pm.test(\"Body has the field entry\", () => {\r",
-							"    pm.expect(response).to.haveOwnProperty(\"entry\");\r",
-							"})\r",
-							"pm.test(\"entry has the corrrect field isbn13\", () => {\r",
-							"    pm.expect(response.entry.isbn13).to.equal(pm.variables.replaceIn(\"{{isbn}}\"));\r",
-							"})\r",
-							"pm.test(\"entry has the corrrect field publication\", () => {\r",
-							"    pm.expect(response.entry.publication).to.equal(2020);\r",
-							"})\r",
-							"pm.test(\"entry has the corrrect field authors\", () => {\r",
-							"    pm.expect(response.entry.authors).to.equal(pm.variables.replaceIn(\"{{name}}\"));\r",
-							"})\r",
-							"pm.test(\"entry has the corrrect field original_title\", () => {\r",
-							"    pm.expect(response.entry.original_title).to.equal(\"TestBook\");\r",
-							"})\r",
-							"pm.test(\"entry has the corrrect field title\", () => {\r",
-							"    pm.expect(response.entry.title).to.equal(\"TestBook edition 1\");\r",
-							"})\r",
-							"pm.test(\"entry has the field ratings\", () => {\r",
-							"    pm.expect(response.entry).to.haveOwnProperty(\"ratings\");\r",
-							"})\r",
-							"pm.test(\"ratings has the corrrect field rating_1\", () => {\r",
-							"    pm.expect(response.entry.ratings.rating_1).to.equal(parseInt(pm.variables.replaceIn(\"{{num1}}\")));\r",
-							"})\r",
-							"pm.test(\"ratings has the corrrect field rating_2\", () => {\r",
-							"    pm.expect(response.entry.ratings.rating_2).to.equal(parseInt(pm.variables.replaceIn(\"{{num2}}\")));\r",
-							"})\r",
-							"pm.test(\"ratings has the corrrect field rating_3\", () => {\r",
-							"    pm.expect(response.entry.ratings.rating_3).to.equal(parseInt(pm.variables.replaceIn(\"{{num3}}\")));\r",
-							"})\r",
-							"pm.test(\"ratings has the corrrect field rating_4\", () => {\r",
-							"    pm.expect(response.entry.ratings.rating_4).to.equal(parseInt(pm.variables.replaceIn(\"{{num4}}\")));\r",
-							"})\r",
-							"pm.test(\"ratings has the corrrect field rating_5\", () => {\r",
-							"    pm.expect(response.entry.ratings.rating_5).to.equal(parseInt(pm.variables.replaceIn(\"{{num5}}\")));\r",
-							"})\r",
-							"pm.test(\"ratings has the corrrect field count\", () => {\r",
-							"    pm.expect(response.entry.ratings.count).to.equal(parseInt(pm.variables.replaceIn(\"{{count}}\")));\r",
-							"})\r",
-							"pm.test(\"ratings has the corrrect field average\", () => {\r",
-							"    pm.expect(response.entry.ratings.average).to.equal(parseFloat(pm.variables.replaceIn(\"{{avg}}\")));\r",
-							"})\r",
-							"pm.test(\"entry has the field icons\", () => {\r",
-							"    pm.expect(response.entry).to.haveOwnProperty(\"icons\");\r",
-							"})\r",
-							"pm.test(\"icons has the corrrect field large\", () => {\r",
-							"    pm.expect(response.entry.icons.large).to.equal(\"https://images.gr-assets.com/books/1474154022m/3.jpg\");\r",
-							"})\r",
-							"pm.test(\"icons has the corrrect field small\", () => {\r",
-							"    pm.expect(response.entry.icons.small).to.equal(\"https://images.gr-assets.com/books/1474154022s/3.jpg\");\r",
-							"})"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"pm.collectionVariables.set(\"isbn\", _.random(100,999)+ \"\" + _.random(100,999) + \"\" + _.random(100,999) + \"\" + _.random(1000,9990));\r",
-							"pm.collectionVariables.set(\"name\", pm.variables.replaceIn(\"{{$randomFirstName}}\"));\r",
-							"pm.collectionVariables.set(\"num1\", _.random(1,9));\r",
-							"pm.collectionVariables.set(\"num2\", _.random(1,9));\r",
-							"pm.collectionVariables.set(\"num3\", _.random(1,9));\r",
-							"pm.collectionVariables.set(\"num4\", _.random(1,9));\r",
-							"pm.collectionVariables.set(\"num5\", _.random(1,9));\r",
-							"pm.collectionVariables.set(\"count\", parseInt(pm.variables.replaceIn(\"{{num1}}\")) + parseInt(pm.variables.replaceIn(\"{{num2}}\")) + parseInt(pm.variables.replaceIn(\"{{num3}}\")) +parseInt(pm.variables.replaceIn(\"{{num4}}\")) + parseInt(pm.variables.replaceIn(\"{{num5}}\")));\r",
-							"pm.collectionVariables.set(\"avg\", (parseInt(pm.variables.replaceIn(\"{{num1}}\")) + parseInt(pm.variables.replaceIn(\"{{num2}}\"))*2 + parseInt(pm.variables.replaceIn(\"{{num3}}\"))*3 +parseInt(pm.variables.replaceIn(\"{{num4}}\"))*4 + parseInt(pm.variables.replaceIn(\"{{num5}}\"))*5)/parseInt(pm.variables.replaceIn(\"{{count}}\")));\r",
-							""
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"isbn13\":\"{{isbn}}\",\r\n    \"authors\": \"{{name}}\",\r\n    \"publication_year\": \"2020\",\r\n    \"original_title\": \"TestBook\",\r\n    \"title\":\"TestBook edition 1\",\r\n    \"rating_1_star\": \"{{num1}}\",\r\n    \"rating_2_star\": \"{{num2}}\",\r\n    \"rating_3_star\": \"{{num3}}\",\r\n    \"rating_4_star\": \"{{num4}}\",\r\n    \"rating_5_star\": \"{{num5}}\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{base_url}}/books/",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"books",
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "{{base_url}}/books/duplicate_isbn13",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"const response = pm.response.json();\r",
-							"\r",
-							"pm.test(\"Response status should be 400\", () => {\r",
-							"    pm.response.to.have.status(400);\r",
-							"})\r",
-							"\r",
-							"pm.test(\"Body has the field message\", () => {\r",
-							"    pm.expect(response).to.haveOwnProperty(\"message\");\r",
-							"})\r",
-							"pm.test(\"Body has the field message\", () => {\r",
-							"    pm.expect(response.message).to.equal(\"isbn13 9780439023480 already exists in the database\");\r",
-							"})"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"isbn13\":\"9780439023480\",\r\n    \"authors\": \"Sviatoslav\",\r\n    \"publication_year\": \"2020\",\r\n    \"original_title\": \"TestBook\",\r\n    \"title\":\"TestBook edition 1\",\r\n    \"rating_1_star\": \"1\",\r\n    \"rating_2_star\": \"2\",\r\n    \"rating_3_star\": \"3\",\r\n    \"rating_4_star\": \"4\",\r\n    \"rating_5_star\": \"5\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{base_url}}/books/",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"books",
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "{{base_url}}/books/invalid_isbn13",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"const response = pm.response.json();\r",
-							"\r",
-							"pm.test(\"Response status should be 400\", () => {\r",
-							"    pm.response.to.have.status(400);\r",
-							"})\r",
-							"\r",
-							"pm.test(\"Body has the field message\", () => {\r",
-							"    pm.expect(response).to.haveOwnProperty(\"message\");\r",
-							"})\r",
-							"pm.test(\"Body has the field message\", () => {\r",
-							"    pm.expect(response.message).to.equal(\"Invalid or missing isbn13 - please refer to documentation\");\r",
-							"})"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"isbn13\":\"21\",\r\n    \"authors\": \"Sviatoslav\",\r\n    \"publication_year\": \"2020\",\r\n    \"original_title\": \"TestBook\",\r\n    \"title\":\"TestBook edition 1\",\r\n    \"rating_1_star\": \"1\",\r\n    \"rating_2_star\": \"2\",\r\n    \"rating_3_star\": \"3\",\r\n    \"rating_4_star\": \"4\",\r\n    \"rating_5_star\": \"5\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{base_url}}/books/",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"books",
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "{{base_url}}/books/invalid_author",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"const response = pm.response.json();\r",
-							"\r",
-							"pm.test(\"Response status should be 400\", () => {\r",
-							"    pm.response.to.have.status(400);\r",
-							"})\r",
-							"\r",
-							"pm.test(\"Body has the field message\", () => {\r",
-							"    pm.expect(response).to.haveOwnProperty(\"message\");\r",
-							"})\r",
-							"pm.test(\"Body has the field message\", () => {\r",
-							"    pm.expect(response.message).to.equal(\"Invalid or missing author - please refer to documentation\");\r",
-							"})"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"pm.collectionVariables.set(\"isbn\", _.random(100,999)+ \"\" + _.random(100,999) + \"\" + _.random(100,999) + \"\" + _.random(1000,9990));"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"isbn13\":\"{{isbn}}\",\r\n    \"authors\": \"\",\r\n    \"publication_year\": \"2020\",\r\n    \"original_title\": \"TestBook\",\r\n    \"title\":\"TestBook edition 1\",\r\n    \"rating_1_star\": \"1\",\r\n    \"rating_2_star\": \"2\",\r\n    \"rating_3_star\": \"3\",\r\n    \"rating_4_star\": \"4\",\r\n    \"rating_5_star\": \"5\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{base_url}}/books/",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"books",
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "{{base_url}}/books/invalid_publication_year",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"pm.collectionVariables.set(\"isbn\", _.random(100,999)+ \"\" + _.random(100,999) + \"\" + _.random(100,999) + \"\" + _.random(1000,9990));"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"const response = pm.response.json();\r",
-							"\r",
-							"pm.test(\"Response status should be 400\", () => {\r",
-							"    pm.response.to.have.status(400);\r",
-							"})\r",
-							"\r",
-							"pm.test(\"Body has the field message\", () => {\r",
-							"    pm.expect(response).to.haveOwnProperty(\"message\");\r",
-							"})\r",
-							"pm.test(\"Body has the field message\", () => {\r",
-							"    pm.expect(response.message).to.equal(\"Invalid or missing publication year - please refer to documentation\");\r",
-							"})"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"isbn13\":\"{{isbn}}\",\r\n    \"authors\": \"Sviatoslav\",\r\n    \"publication_year\": \"2025\",\r\n    \"original_title\": \"TestBook\",\r\n    \"title\":\"TestBook edition 1\",\r\n    \"rating_1_star\": \"1\",\r\n    \"rating_2_star\": \"2\",\r\n    \"rating_3_star\": \"3\",\r\n    \"rating_4_star\": \"4\",\r\n    \"rating_5_star\": \"5\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{base_url}}/books/",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"books",
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "{{base_url}}/books/invalid_original_title",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"pm.collectionVariables.set(\"isbn\", _.random(100,999)+ \"\" + _.random(100,999) + \"\" + _.random(100,999) + \"\" + _.random(1000,9990));"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"const response = pm.response.json();\r",
-							"\r",
-							"pm.test(\"Response status should be 400\", () => {\r",
-							"    pm.response.to.have.status(400);\r",
-							"})\r",
-							"\r",
-							"pm.test(\"Body has the field message\", () => {\r",
-							"    pm.expect(response).to.haveOwnProperty(\"message\");\r",
-							"})\r",
-							"pm.test(\"Body has the field message\", () => {\r",
-							"    pm.expect(response.message).to.equal(\"Invalid or missing original title - please refer to documentation\");\r",
-							"})"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"isbn13\":\"{{isbn}}\",\r\n    \"authors\": \"Sviatoslav\",\r\n    \"publication_year\": \"2020\",\r\n    \"original_title\": \"\",\r\n    \"title\":\"TestBook edition 1\",\r\n    \"rating_1_star\": \"1\",\r\n    \"rating_2_star\": \"2\",\r\n    \"rating_3_star\": \"3\",\r\n    \"rating_4_star\": \"4\",\r\n    \"rating_5_star\": \"5\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{base_url}}/books/",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"books",
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "{{base_url}}/books/invalid_title",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"pm.collectionVariables.set(\"isbn\", _.random(100,999)+ \"\" + _.random(100,999) + \"\" + _.random(100,999) + \"\" + _.random(1000,9990));"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"const response = pm.response.json();\r",
-							"\r",
-							"pm.test(\"Response status should be 400\", () => {\r",
-							"    pm.response.to.have.status(400);\r",
-							"})\r",
-							"\r",
-							"pm.test(\"Body has the field message\", () => {\r",
-							"    pm.expect(response).to.haveOwnProperty(\"message\");\r",
-							"})\r",
-							"pm.test(\"Body has the field message\", () => {\r",
-							"    pm.expect(response.message).to.equal(\"Invalid or missing title - please refer to documentation\");\r",
-							"})"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"isbn13\":\"{{isbn}}\",\r\n    \"authors\": \"Sviatoslav\",\r\n    \"publication_year\": \"2020\",\r\n    \"original_title\": \"TestBook\",\r\n    \"title\":\"\",\r\n    \"rating_1_star\": \"1\",\r\n    \"rating_2_star\": \"2\",\r\n    \"rating_3_star\": \"3\",\r\n    \"rating_4_star\": \"4\",\r\n    \"rating_5_star\": \"5\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{base_url}}/books/",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"books",
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "{{base_url}}/books/invalid_ratings",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"pm.collectionVariables.set(\"isbn\", _.random(100,999)+ \"\" + _.random(100,999) + \"\" + _.random(100,999) + \"\" + _.random(1000,9990));"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"const response = pm.response.json();\r",
-							"\r",
-							"pm.test(\"Response status should be 400\", () => {\r",
-							"    pm.response.to.have.status(400);\r",
-							"})\r",
-							"\r",
-							"pm.test(\"Body has the field message\", () => {\r",
-							"    pm.expect(response).to.haveOwnProperty(\"message\");\r",
-							"})\r",
-							"pm.test(\"Body has the field message\", () => {\r",
-							"    pm.expect(response.message).to.equal(\"Invalid or missing rating information - please refer to documentation\");\r",
-							"})"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"isbn13\":\"{{isbn}}\",\r\n    \"authors\": \"Sviatoslav\",\r\n    \"publication_year\": \"2020\",\r\n    \"original_title\": \"TestBook\",\r\n    \"title\":\"TestBook edition 1\",\r\n    \"rating_1_star\": \"1\",\r\n    \"rating_2_star\": \"2\",\r\n    \"rating_3_star\": \"-1\",\r\n    \"rating_4_star\": \"4\",\r\n    \"rating_5_star\": \"5\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{base_url}}/books/",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"books",
-						""
-					]
-				}
-			},
-			"response": []
-		}
-	],
-	"variable": [
-		{
-			"key": "isbn",
-			"value": ""
-		},
-		{
-			"key": "name",
-			"value": ""
-		},
-		{
-			"key": "num1",
-			"value": ""
-		},
-		{
-			"key": "num2",
-			"value": ""
-		},
-		{
-			"key": "num3",
-			"value": ""
-		},
-		{
-			"key": "num4",
-			"value": ""
-		},
-		{
-			"key": "num5",
-			"value": ""
-		},
-		{
-			"key": "count",
-			"value": ""
-		},
-		{
-			"key": "avg",
-			"value": ""
-		}
-	]
+    "info": {
+        "_postman_id": "f0c336c8-f549-4842-87d7-c05dd20cc3c6",
+        "name": "Post tests",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "34355155"
+    },
+    "item": [
+        {
+            "name": "{{base_url}}/books/pass",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "const response = pm.response.json();\r",
+                            "\r",
+                            "pm.test(\"Response status should be 200\", () => {\r",
+                            "    pm.response.to.have.status(201);\r",
+                            "})\r",
+                            "\r",
+                            "pm.test(\"Body has the field entry\", () => {\r",
+                            "    pm.expect(response).to.haveOwnProperty(\"entry\");\r",
+                            "})\r",
+                            "pm.test(\"Body has the field entry\", () => {\r",
+                            "    pm.expect(response).to.haveOwnProperty(\"entry\");\r",
+                            "})\r",
+                            "pm.test(\"entry has the corrrect field isbn13\", () => {\r",
+                            "    pm.expect(response.entry.isbn13).to.equal(pm.variables.replaceIn(\"{{isbn}}\"));\r",
+                            "})\r",
+                            "pm.test(\"entry has the corrrect field publication\", () => {\r",
+                            "    pm.expect(response.entry.publication).to.equal(2020);\r",
+                            "})\r",
+                            "pm.test(\"entry has the corrrect field authors\", () => {\r",
+                            "    pm.expect(response.entry.authors).to.equal(pm.variables.replaceIn(\"{{name}}\"));\r",
+                            "})\r",
+                            "pm.test(\"entry has the corrrect field original_title\", () => {\r",
+                            "    pm.expect(response.entry.original_title).to.equal(\"TestBook\");\r",
+                            "})\r",
+                            "pm.test(\"entry has the corrrect field title\", () => {\r",
+                            "    pm.expect(response.entry.title).to.equal(\"TestBook edition 1\");\r",
+                            "})\r",
+                            "pm.test(\"entry has the field ratings\", () => {\r",
+                            "    pm.expect(response.entry).to.haveOwnProperty(\"ratings\");\r",
+                            "})\r",
+                            "pm.test(\"ratings has the corrrect field rating_1\", () => {\r",
+                            "    pm.expect(response.entry.ratings.rating_1).to.equal(parseInt(pm.variables.replaceIn(\"{{num1}}\")));\r",
+                            "})\r",
+                            "pm.test(\"ratings has the corrrect field rating_2\", () => {\r",
+                            "    pm.expect(response.entry.ratings.rating_2).to.equal(parseInt(pm.variables.replaceIn(\"{{num2}}\")));\r",
+                            "})\r",
+                            "pm.test(\"ratings has the corrrect field rating_3\", () => {\r",
+                            "    pm.expect(response.entry.ratings.rating_3).to.equal(parseInt(pm.variables.replaceIn(\"{{num3}}\")));\r",
+                            "})\r",
+                            "pm.test(\"ratings has the corrrect field rating_4\", () => {\r",
+                            "    pm.expect(response.entry.ratings.rating_4).to.equal(parseInt(pm.variables.replaceIn(\"{{num4}}\")));\r",
+                            "})\r",
+                            "pm.test(\"ratings has the corrrect field rating_5\", () => {\r",
+                            "    pm.expect(response.entry.ratings.rating_5).to.equal(parseInt(pm.variables.replaceIn(\"{{num5}}\")));\r",
+                            "})\r",
+                            "pm.test(\"ratings has the corrrect field count\", () => {\r",
+                            "    pm.expect(response.entry.ratings.count).to.equal(parseInt(pm.variables.replaceIn(\"{{count}}\")));\r",
+                            "})\r",
+                            "pm.test(\"ratings has the corrrect field average\", () => {\r",
+                            "    pm.expect(response.entry.ratings.average).to.equal(parseFloat(pm.variables.replaceIn(\"{{avg}}\")));\r",
+                            "})\r",
+                            "pm.test(\"entry has the field icons\", () => {\r",
+                            "    pm.expect(response.entry).to.haveOwnProperty(\"icons\");\r",
+                            "})\r",
+                            "pm.test(\"icons has the corrrect field large\", () => {\r",
+                            "    pm.expect(response.entry.icons.large).to.equal(\"https://images.gr-assets.com/books/1474154022m/3.jpg\");\r",
+                            "})\r",
+                            "pm.test(\"icons has the corrrect field small\", () => {\r",
+                            "    pm.expect(response.entry.icons.small).to.equal(\"https://images.gr-assets.com/books/1474154022s/3.jpg\");\r",
+                            "})"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                },
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "pm.collectionVariables.set(\"isbn\", _.random(100,999)+ \"\" + _.random(100,999) + \"\" + _.random(100,999) + \"\" + _.random(1000,9990));\r",
+                            "pm.collectionVariables.set(\"name\", pm.variables.replaceIn(\"{{$randomFirstName}}\"));\r",
+                            "pm.collectionVariables.set(\"num1\", _.random(1,9));\r",
+                            "pm.collectionVariables.set(\"num2\", _.random(1,9));\r",
+                            "pm.collectionVariables.set(\"num3\", _.random(1,9));\r",
+                            "pm.collectionVariables.set(\"num4\", _.random(1,9));\r",
+                            "pm.collectionVariables.set(\"num5\", _.random(1,9));\r",
+                            "pm.collectionVariables.set(\"count\", parseInt(pm.variables.replaceIn(\"{{num1}}\")) + parseInt(pm.variables.replaceIn(\"{{num2}}\")) + parseInt(pm.variables.replaceIn(\"{{num3}}\")) +parseInt(pm.variables.replaceIn(\"{{num4}}\")) + parseInt(pm.variables.replaceIn(\"{{num5}}\")));\r",
+                            "pm.collectionVariables.set(\"avg\", (parseInt(pm.variables.replaceIn(\"{{num1}}\")) + parseInt(pm.variables.replaceIn(\"{{num2}}\"))*2 + parseInt(pm.variables.replaceIn(\"{{num3}}\"))*3 +parseInt(pm.variables.replaceIn(\"{{num4}}\"))*4 + parseInt(pm.variables.replaceIn(\"{{num5}}\"))*5)/parseInt(pm.variables.replaceIn(\"{{count}}\")));\r",
+                            ""
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\r\n    \"isbn13\":\"{{isbn}}\",\r\n    \"authors\": \"{{name}}\",\r\n    \"publication_year\": \"2020\",\r\n    \"original_title\": \"TestBook\",\r\n    \"title\":\"TestBook edition 1\",\r\n    \"rating_1_star\": \"{{num1}}\",\r\n    \"rating_2_star\": \"{{num2}}\",\r\n    \"rating_3_star\": \"{{num3}}\",\r\n    \"rating_4_star\": \"{{num4}}\",\r\n    \"rating_5_star\": \"{{num5}}\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{base_url}}/books/",
+                    "host": ["{{base_url}}"],
+                    "path": ["books", ""]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "{{base_url}}/books/duplicate_isbn13",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "const response = pm.response.json();\r",
+                            "\r",
+                            "pm.test(\"Response status should be 400\", () => {\r",
+                            "    pm.response.to.have.status(400);\r",
+                            "})\r",
+                            "\r",
+                            "pm.test(\"Body has the field message\", () => {\r",
+                            "    pm.expect(response).to.haveOwnProperty(\"message\");\r",
+                            "})\r",
+                            "pm.test(\"Body has the field message\", () => {\r",
+                            "    pm.expect(response.message).to.equal(\"isbn13 9780439023480 already exists in the database\");\r",
+                            "})"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\r\n    \"isbn13\":\"9780439023480\",\r\n    \"authors\": \"Sviatoslav\",\r\n    \"publication_year\": \"2020\",\r\n    \"original_title\": \"TestBook\",\r\n    \"title\":\"TestBook edition 1\",\r\n    \"rating_1_star\": \"1\",\r\n    \"rating_2_star\": \"2\",\r\n    \"rating_3_star\": \"3\",\r\n    \"rating_4_star\": \"4\",\r\n    \"rating_5_star\": \"5\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{base_url}}/books/",
+                    "host": ["{{base_url}}"],
+                    "path": ["books", ""]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "{{base_url}}/books/invalid_isbn13",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "const response = pm.response.json();\r",
+                            "\r",
+                            "pm.test(\"Response status should be 400\", () => {\r",
+                            "    pm.response.to.have.status(400);\r",
+                            "})\r",
+                            "\r",
+                            "pm.test(\"Body has the field message\", () => {\r",
+                            "    pm.expect(response).to.haveOwnProperty(\"message\");\r",
+                            "})\r",
+                            "pm.test(\"Body has the field message\", () => {\r",
+                            "    pm.expect(response.message).to.equal(\"Invalid or missing isbn13 - please refer to documentation\");\r",
+                            "})"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\r\n    \"isbn13\":\"21\",\r\n    \"authors\": \"Sviatoslav\",\r\n    \"publication_year\": \"2020\",\r\n    \"original_title\": \"TestBook\",\r\n    \"title\":\"TestBook edition 1\",\r\n    \"rating_1_star\": \"1\",\r\n    \"rating_2_star\": \"2\",\r\n    \"rating_3_star\": \"3\",\r\n    \"rating_4_star\": \"4\",\r\n    \"rating_5_star\": \"5\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{base_url}}/books/",
+                    "host": ["{{base_url}}"],
+                    "path": ["books", ""]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "{{base_url}}/books/invalid_author",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "const response = pm.response.json();\r",
+                            "\r",
+                            "pm.test(\"Response status should be 400\", () => {\r",
+                            "    pm.response.to.have.status(400);\r",
+                            "})\r",
+                            "\r",
+                            "pm.test(\"Body has the field message\", () => {\r",
+                            "    pm.expect(response).to.haveOwnProperty(\"message\");\r",
+                            "})\r",
+                            "pm.test(\"Body has the field message\", () => {\r",
+                            "    pm.expect(response.message).to.equal(\"Invalid or missing author - please refer to documentation\");\r",
+                            "})"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                },
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "pm.collectionVariables.set(\"isbn\", _.random(100,999)+ \"\" + _.random(100,999) + \"\" + _.random(100,999) + \"\" + _.random(1000,9990));"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\r\n    \"isbn13\":\"{{isbn}}\",\r\n    \"authors\": \"\",\r\n    \"publication_year\": \"2020\",\r\n    \"original_title\": \"TestBook\",\r\n    \"title\":\"TestBook edition 1\",\r\n    \"rating_1_star\": \"1\",\r\n    \"rating_2_star\": \"2\",\r\n    \"rating_3_star\": \"3\",\r\n    \"rating_4_star\": \"4\",\r\n    \"rating_5_star\": \"5\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{base_url}}/books/",
+                    "host": ["{{base_url}}"],
+                    "path": ["books", ""]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "{{base_url}}/books/invalid_publication_year",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "pm.collectionVariables.set(\"isbn\", _.random(100,999)+ \"\" + _.random(100,999) + \"\" + _.random(100,999) + \"\" + _.random(1000,9990));"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "const response = pm.response.json();\r",
+                            "\r",
+                            "pm.test(\"Response status should be 400\", () => {\r",
+                            "    pm.response.to.have.status(400);\r",
+                            "})\r",
+                            "\r",
+                            "pm.test(\"Body has the field message\", () => {\r",
+                            "    pm.expect(response).to.haveOwnProperty(\"message\");\r",
+                            "})\r",
+                            "pm.test(\"Body has the field message\", () => {\r",
+                            "    pm.expect(response.message).to.equal(\"Invalid or missing publication year - please refer to documentation\");\r",
+                            "})"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\r\n    \"isbn13\":\"{{isbn}}\",\r\n    \"authors\": \"Sviatoslav\",\r\n    \"publication_year\": \"2025\",\r\n    \"original_title\": \"TestBook\",\r\n    \"title\":\"TestBook edition 1\",\r\n    \"rating_1_star\": \"1\",\r\n    \"rating_2_star\": \"2\",\r\n    \"rating_3_star\": \"3\",\r\n    \"rating_4_star\": \"4\",\r\n    \"rating_5_star\": \"5\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{base_url}}/books/",
+                    "host": ["{{base_url}}"],
+                    "path": ["books", ""]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "{{base_url}}/books/invalid_original_title",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "pm.collectionVariables.set(\"isbn\", _.random(100,999)+ \"\" + _.random(100,999) + \"\" + _.random(100,999) + \"\" + _.random(1000,9990));"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "const response = pm.response.json();\r",
+                            "\r",
+                            "pm.test(\"Response status should be 400\", () => {\r",
+                            "    pm.response.to.have.status(400);\r",
+                            "})\r",
+                            "\r",
+                            "pm.test(\"Body has the field message\", () => {\r",
+                            "    pm.expect(response).to.haveOwnProperty(\"message\");\r",
+                            "})\r",
+                            "pm.test(\"Body has the field message\", () => {\r",
+                            "    pm.expect(response.message).to.equal(\"Invalid or missing original title - please refer to documentation\");\r",
+                            "})"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\r\n    \"isbn13\":\"{{isbn}}\",\r\n    \"authors\": \"Sviatoslav\",\r\n    \"publication_year\": \"2020\",\r\n    \"original_title\": \"\",\r\n    \"title\":\"TestBook edition 1\",\r\n    \"rating_1_star\": \"1\",\r\n    \"rating_2_star\": \"2\",\r\n    \"rating_3_star\": \"3\",\r\n    \"rating_4_star\": \"4\",\r\n    \"rating_5_star\": \"5\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{base_url}}/books/",
+                    "host": ["{{base_url}}"],
+                    "path": ["books", ""]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "{{base_url}}/books/invalid_title",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "pm.collectionVariables.set(\"isbn\", _.random(100,999)+ \"\" + _.random(100,999) + \"\" + _.random(100,999) + \"\" + _.random(1000,9990));"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "const response = pm.response.json();\r",
+                            "\r",
+                            "pm.test(\"Response status should be 400\", () => {\r",
+                            "    pm.response.to.have.status(400);\r",
+                            "})\r",
+                            "\r",
+                            "pm.test(\"Body has the field message\", () => {\r",
+                            "    pm.expect(response).to.haveOwnProperty(\"message\");\r",
+                            "})\r",
+                            "pm.test(\"Body has the field message\", () => {\r",
+                            "    pm.expect(response.message).to.equal(\"Invalid or missing title - please refer to documentation\");\r",
+                            "})"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\r\n    \"isbn13\":\"{{isbn}}\",\r\n    \"authors\": \"Sviatoslav\",\r\n    \"publication_year\": \"2020\",\r\n    \"original_title\": \"TestBook\",\r\n    \"title\":\"\",\r\n    \"rating_1_star\": \"1\",\r\n    \"rating_2_star\": \"2\",\r\n    \"rating_3_star\": \"3\",\r\n    \"rating_4_star\": \"4\",\r\n    \"rating_5_star\": \"5\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{base_url}}/books/",
+                    "host": ["{{base_url}}"],
+                    "path": ["books", ""]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "{{base_url}}/books/invalid_ratings",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "pm.collectionVariables.set(\"isbn\", _.random(100,999)+ \"\" + _.random(100,999) + \"\" + _.random(100,999) + \"\" + _.random(1000,9990));"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "const response = pm.response.json();\r",
+                            "\r",
+                            "pm.test(\"Response status should be 400\", () => {\r",
+                            "    pm.response.to.have.status(400);\r",
+                            "})\r",
+                            "\r",
+                            "pm.test(\"Body has the field message\", () => {\r",
+                            "    pm.expect(response).to.haveOwnProperty(\"message\");\r",
+                            "})\r",
+                            "pm.test(\"Body has the field message\", () => {\r",
+                            "    pm.expect(response.message).to.equal(\"Invalid or missing rating information - please refer to documentation\");\r",
+                            "})"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\r\n    \"isbn13\":\"{{isbn}}\",\r\n    \"authors\": \"Sviatoslav\",\r\n    \"publication_year\": \"2020\",\r\n    \"original_title\": \"TestBook\",\r\n    \"title\":\"TestBook edition 1\",\r\n    \"rating_1_star\": \"1\",\r\n    \"rating_2_star\": \"2\",\r\n    \"rating_3_star\": \"-1\",\r\n    \"rating_4_star\": \"4\",\r\n    \"rating_5_star\": \"5\",\r\n    \"image_url\":\"https://images.gr-assets.com/books/1474154022m/3.jpg\",\r\n    \"image_small_url\":\"https://images.gr-assets.com/books/1474154022s/3.jpg\"\r\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{base_url}}/books/",
+                    "host": ["{{base_url}}"],
+                    "path": ["books", ""]
+                }
+            },
+            "response": []
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSmV3ZWwiLCJyb2xlIjo1LCJpZCI6MzcsImlhdCI6MTcxNTkxNDczNiwiZXhwIjoxNzE3MTI0MzM2fQ.jWzM-jS8UDxmjk1YfYArerf4o8MZfMvjhL-aaxZrIzY",
+                "type": "string"
+            }
+        ]
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [""]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [""]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "localhost:4000",
+            "type": "string"
+        },
+        {
+            "key": "isbn",
+            "value": ""
+        },
+        {
+            "key": "name",
+            "value": ""
+        },
+        {
+            "key": "num1",
+            "value": ""
+        },
+        {
+            "key": "num2",
+            "value": ""
+        },
+        {
+            "key": "num3",
+            "value": ""
+        },
+        {
+            "key": "num4",
+            "value": ""
+        },
+        {
+            "key": "num5",
+            "value": ""
+        },
+        {
+            "key": "count",
+            "value": ""
+        },
+        {
+            "key": "avg",
+            "value": ""
+        }
+    ]
 }

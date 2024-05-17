@@ -1,11 +1,63 @@
 {
 	"info": {
-		"_postman_id": "8eb65de0-1076-43ca-833a-308a3c94e0a9",
-		"name": "Auth",
+		"_postman_id": "dbbec749-c4d2-428d-b0e5-b9e95a202b05",
+		"name": "Auth tests",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "33965033"
+		"_exporter_id": "34355155"
 	},
 	"item": [
+		{
+			"name": "{{base_url}}/register/pass create",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.collectionVariables.set(\"firstname\", pm.variables.replaceIn(\"{{$randomFirstName}}\"));\r",
+							"pm.collectionVariables.set(\"lastname\", pm.variables.replaceIn(\"{{$randomLastName}}\"));\r",
+							"pm.collectionVariables.set(\"email\", pm.variables.replaceIn(\"{{$randomEmail}}\"));\r",
+							"pm.collectionVariables.set(\"username\", pm.variables.replaceIn(\"{{$randomUserName}}\"));\r",
+							"pm.collectionVariables.set(\"phone\", pm.variables.replaceIn(\"{{$randomPhoneNumber}}\"));"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"firstname\": \"{{firstname}}\",\r\n    \"lastname\": \"{{lastname}}\",\r\n    \"email\": \"{{email}}\",\r\n    \"password\": \"bfg!@123Letsgo\",\r\n    \"username\": \"Nils_Tillman30\",\r\n    \"role\": 5,\r\n    \"phone\": \"{{phone}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/register",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
 		{
 			"name": "{{base_url}}/register/pass",
 			"event": [
@@ -35,7 +87,8 @@
 							"    pm.response.to.have.status(201);\r",
 							"    pm.expect(response).to.have.property(\"accessToken\");\r",
 							"    pm.expect(response).to.have.property(\"id\");\r",
-							"})"
+							"})\r",
+							""
 						],
 						"type": "text/javascript",
 						"packages": {}
@@ -834,6 +887,9 @@
 			"response": []
 		}
 	],
+	"auth": {
+		"type": "inherit"
+	},
 	"event": [
 		{
 			"listen": "prerequest",
@@ -882,6 +938,42 @@
 		},
 		{
 			"key": "phone",
+			"value": ""
+		},
+		{
+			"key": "isbn",
+			"value": ""
+		},
+		{
+			"key": "name",
+			"value": ""
+		},
+		{
+			"key": "num1",
+			"value": ""
+		},
+		{
+			"key": "num2",
+			"value": ""
+		},
+		{
+			"key": "num3",
+			"value": ""
+		},
+		{
+			"key": "num4",
+			"value": ""
+		},
+		{
+			"key": "num5",
+			"value": ""
+		},
+		{
+			"key": "count",
+			"value": ""
+		},
+		{
+			"key": "avg",
 			"value": ""
 		}
 	]
