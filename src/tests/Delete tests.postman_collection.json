@@ -1,0 +1,183 @@
+{
+    "info": {
+        "_postman_id": "6c63d544-62cf-4eb4-8e63-e19cf8482abc",
+        "name": "Delete tests",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "35011990"
+    },
+    "item": [
+        {
+            "name": "{{base_url}}/message/",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "// Test for /book/title/:title DELETE request\r",
+                            "\r",
+                            "// Check if the status code is 404 when book not found\r",
+                            "pm.test(\"Status code is 404 when book not found\", function () {\r",
+                            "    pm.response.to.have.status(404);\r",
+                            "});\r",
+                            "\r",
+                            "// Check if error message is returned when book not found\r",
+                            "pm.test(\"Check error message when book not found\", function () {\r",
+                            "    pm.expect(pm.response.json()).to.have.property('message', 'Book not found.');\r",
+                            "});\r",
+                            ""
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                }
+            ],
+            "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/books/title/will not find anything",
+                    "host": ["{{base_url}}"],
+                    "path": ["books", "title", "will not find anything"]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "{{base_url}}/books/isbn/server rerror",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "// Test for /book/:isbn DELETE request\r",
+                            "\r",
+                            "// Check if the status code is 500 for server error\r",
+                            "pm.test(\"Status code is 500 for server error\", function () {\r",
+                            "    pm.response.to.have.status(500);\r",
+                            "});\r",
+                            "\r",
+                            "// Check if error message is returned for server error\r",
+                            "pm.test(\"Check error message for server error\", function () {\r",
+                            "    pm.expect(pm.response.json()).to.have.property('message', 'Server error - contact support.');\r",
+                            "});\r",
+                            ""
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                }
+            ],
+            "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/books/isbn/server rerror",
+                    "host": ["{{base_url}}"],
+                    "path": ["books", "isbn", "server rerror"]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "{{base_url}}/books/isbn/412213",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "// Test for /book/:isbn DELETE request\r",
+                            "\r",
+                            "// Check if the status code is 404 when book not found\r",
+                            "pm.test(\"Status code is 404 when book not found\", function () {\r",
+                            "    pm.response.to.have.status(404);\r",
+                            "});\r",
+                            "\r",
+                            "// Check if error message is returned when book not found\r",
+                            "pm.test(\"Check error message when book not found\", function () {\r",
+                            "    pm.expect(pm.response.json()).to.have.property('message', 'Book not found.');\r",
+                            "});\r",
+                            ""
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                }
+            ],
+            "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/books/isbn/412213",
+                    "host": ["{{base_url}}"],
+                    "path": ["books", "isbn", "412213"]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "{{base_url}}/books/isbn/9780525478810",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "// Test for deleting a book by ISBN\r",
+                            "pm.test(\"Delete book by ISBN - Status code is 200\", function () {\r",
+                            "    pm.response.to.have.status(200);\r",
+                            "});\r",
+                            "\r",
+                            "pm.test(\"Delete book by ISBN - Book deleted successfully\", function () {\r",
+                            "    pm.expect(pm.response.json().message).to.eql(\"Book deleted successfully.\");\r",
+                            "});"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                }
+            ],
+            "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/books/isbn/9780525478810",
+                    "host": ["{{base_url}}"],
+                    "path": ["books", "isbn", "9780525478810"]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "{{base_url}}/books/title/catching fire",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "// Test for deleting a book by title\r",
+                            "pm.test(\"Delete book by title - Status code is 200\", function () {\r",
+                            "    pm.response.to.have.status(200);\r",
+                            "});\r",
+                            "\r",
+                            "pm.test(\"Delete book by title - Book deleted successfully\", function () {\r",
+                            "    pm.expect(pm.response.json().message).to.eql(\"Book deleted successfully.\");\r",
+                            "});\r",
+                            ""
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                }
+            ],
+            "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/books/title/catching fire",
+                    "host": ["{{base_url}}"],
+                    "path": ["books", "title", "catching fire"]
+                }
+            },
+            "response": []
+        }
+    ]
+}

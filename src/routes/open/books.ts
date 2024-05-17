@@ -38,7 +38,7 @@ export interface IBookRequest extends Request {
 const bookRouter: Router = express.Router();
 
 function createInterface(resultRow): IBook {
-    let icons: IUrlIcon = {
+    const icons: IUrlIcon = {
         large: resultRow.image_url,
         small: resultRow.image_small_url,
     };
@@ -55,7 +55,7 @@ function createInterface(resultRow): IBook {
     //         resultRow.rating_4_star * 4 +
     //         resultRow.rating_5_star * 5) /
     //     count;
-    let rating: IRatings = {
+    const rating: IRatings = {
         average: resultRow.rating_avg,
         count: resultRow.rating_count,
         rating_1: resultRow.rating_1_star,
@@ -64,7 +64,7 @@ function createInterface(resultRow): IBook {
         rating_4: resultRow.rating_4_star,
         rating_5: resultRow.rating_5_star,
     };
-    let book: IBook = {
+    const book: IBook = {
         isbn13: resultRow.isbn13,
         authors: resultRow.authors,
         publication: resultRow.original_publication_year,
@@ -265,6 +265,128 @@ bookRouter.post(
             });
     }
 );
+
+// Middleware to validate ISBN and ratings
+function validateBookData(
+    request: Request,
+    response: Response,
+    next: NextFunction
+) {
+    const {
+        isbn13,
+        rating_1_star,
+        rating_2_star,
+        rating_3_star,
+        rating_4_star,
+        rating_5_star,
+    } = request.body;
+    if (!isbn13 || isbn13.length !== 13) {
+        response
+            .status(400)
+            .send('Invalid or missing isbn13 - please refer to documentation');
+    } else if (
+        rating_1_star === undefined ||
+        rating_2_star === undefined ||
+        rating_3_star === undefined ||
+        rating_4_star === undefined ||
+        rating_5_star === undefined
+    ) {
+        response
+            .status(400)
+            .send('Invalid or missing ratings – please refer to documentation');
+    } else {
+        next();
+    }
+}
+
+/**
+ * @api {delete} /book/:isbn Delete a book by ISBN
+ *
+ * @apiDescription Delete a book from the database based on its ISBN.
+ *
+ * @apiName DeleteBookByISBN
+ * @apiGroup Book
+ *
+ * @apiParam {String} isbn The ISBN of the book to delete.
+ *
+ * @apiSuccess (Success 200) {String} message "Book deleted successfully."
+ *
+ * @apiError (404) {String} message "Book not found."
+ * @apiError (500) {String} message "Server error - contact support."
+ */
+bookRouter.delete('/isbn/:isbn', (request: Request, response: Response) => {
+    const { isbn } = request.params;
+    const theQuery = 'DELETE FROM books WHERE isbn13 = $1 RETURNING *';
+
+    if (!isbn) {
+        return response.status(400).send({ message: 'Missing ISBN parameter' });
+    }
+
+    pool.query(theQuery, [isbn])
+        .then((result) => {
+            if (result.rowCount > 0) {
+                response.status(200).send({
+                    message: 'Book deleted successfully.',
+                });
+            } else {
+                response.status(404).send({
+                    message: 'Book not found.',
+                });
+            }
+        })
+        .catch((error) => {
+            console.error('DB Query error on DELETE /:isbn', error);
+            response.status(500).send({
+                message: 'Server error - contact support.',
+            });
+        });
+});
+
+/**
+ * @api {delete} /book/title/:title Delete a book by title
+ *
+ * @apiDescription Delete a book from the database based on its title.
+ *
+ * @apiName DeleteBookByTitle
+ * @apiGroup Book
+ *
+ * @apiParam {String} title The title of the book to delete.
+ *
+ * @apiSuccess (Success 200) {String} message "Book deleted successfully."
+ *
+ * @apiError (404) {String} message "Book not found."
+ * @apiError (500) {String} message "Server error - contact support."
+ */
+bookRouter.delete('/title/:title', (request: Request, response: Response) => {
+    const { title } = request.params;
+    const theQuery =
+        'DELETE FROM books WHERE original_title ILIKE $1 OR title ILIKE $1 RETURNING *';
+
+    if (!title) {
+        return response
+            .status(400)
+            .send({ message: 'Missing title parameter' });
+    }
+
+    pool.query(theQuery, [`%${title}%`])
+        .then((result) => {
+            if (result.rowCount > 0) {
+                response.status(200).send({
+                    message: 'Book deleted successfully.',
+                });
+            } else {
+                response.status(404).send({
+                    message: 'Book not found.',
+                });
+            }
+        })
+        .catch((error) => {
+            console.error('DB Query error on DELETE /title/:title', error);
+            response.status(500).send({
+                message: 'Server error - contact support.',
+            });
+        });
+});
 
 // "return" the router
 export { bookRouter };
