@@ -83,10 +83,15 @@ function validateBookData(
             .send('Invalid or missing isbn13 - please refer to documentation');
     } else if (
         rating_1_star === undefined ||
+        isNaN(rating_1_star) ||
         rating_2_star === undefined ||
+        isNaN(rating_2_star) ||
         rating_3_star === undefined ||
+        isNaN(rating_3_star) ||
         rating_4_star === undefined ||
-        rating_5_star === undefined
+        isNaN(rating_4_star) ||
+        rating_5_star === undefined ||
+        isNaN(rating_5_star)
     ) {
         response
             .status(400)
@@ -633,7 +638,7 @@ bookRouter.post(
 );
 
 /**
- * @api {put} /books Request to alter an exisitng entry
+ * @api {put} /books Request to alter an entry
  *
  * @apiDescription Request to alter a books rating within the DB
  *
@@ -664,116 +669,6 @@ bookRouter.post(
  * @apiUse JSONError
  */
 
-/**
- * Old .put functionality that overwrote the ratings
-bookRouter.put(
-    '/',
-    validateBookData,
-    (request: Request, response: Response) => {
-        const {
-            isbn13,
-            rating_1_star,
-            rating_2_star,
-            rating_3_star,
-            rating_4_star,
-            rating_5_star,
-        } = request.body;
-        const theQuery = `UPDATE Books SET rating_1_star = $1, rating_2_star = $2, rating_3_star = $3, rating_4_star = $4, rating_5_star = $5 WHERE isbn13 = $6 RETURNING *`;
-        const values = [
-            rating_1_star,
-            rating_2_star,
-            rating_3_star,
-            rating_4_star,
-            rating_5_star,
-            isbn13,
-        ];
-
-        pool.query(theQuery, values)
-            .then((result) => {
-                if (result.rowCount === 1) {
-                    response.send({ updated: createInterface(result.rows[0]) });
-                } else {
-                    response.status(404).send('ISBN not found');
-                }
-            })
-            .catch((error) => {
-                console.error('DB Query error on PUT', error);
-                response.status(500).send({
-                    message: 'Server error - contact support',
-                    error: error.message,
-            .then((result) => {
-                const theQuery =
-                    'INSERT INTO BOOKS(id, isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *';
-                let count: number =
-                    parseInt(request.body.rating_1_star) +
-                    parseInt(request.body.rating_2_star) +
-                    parseInt(request.body.rating_3_star) +
-                    parseInt(request.body.rating_4_star) +
-                    parseInt(request.body.rating_5_star);
-                let avg: number =
-                    (parseInt(request.body.rating_1_star) +
-                        parseInt(request.body.rating_2_star) * 2 +
-                        parseInt(request.body.rating_3_star) * 3 +
-                        parseInt(request.body.rating_4_star) * 4 +
-                        parseInt(request.body.rating_5_star) * 5) /
-                    count;
-                const values = [
-                    parseInt(result.rows[0].max) + 1,
-                    request.body.isbn13,
-                    request.body.authors,
-                    request.body.publication_year,
-                    request.body.original_title,
-                    request.body.title,
-                    avg,
-                    count,
-                    request.body.rating_1_star,
-                    request.body.rating_2_star,
-                    request.body.rating_3_star,
-                    request.body.rating_4_star,
-                    request.body.rating_5_star,
-                    request.body.image_url,
-                    request.body.image_small_url,
-                ];
-
-                pool.query(theQuery, values)
-                    .then((result) => {
-                        // result.rows array are the records returned from the SQL statement.
-                        // An INSERT statement will return a single row, the row that was inserted.
-                        response.status(201).send({
-                            entry: createInterface(result.rows[0]),
-                        });
-                    })
-                    .catch((error) => {
-                        if (
-                            error.detail != undefined &&
-                            (error.detail as string).endsWith('already exists.')
-                        ) {
-                            console.error('Name exists');
-                            response.status(400).send({
-                                message: 'Name exists',
-                            });
-                        } else {
-                            //log the error
-                            console.error('DB Query error on POST');
-                            console.error(error);
-                            response.status(500).send({
-                                message: 'server error - contact support 2',
-                                cl: result.rows[0].count + 1,
-                            });
-                        }
-                    });
-            })
-            .catch((error) => {
-                console.error('DB Query error on POST, Count');
-                console.error(error);
-                response.status(500).send({
-                    message: 'server error - contact support 3',
-                    cl: 'failed on count',
-                });
-            });
-    }
-);
- */
 bookRouter.put(
     '/',
     validateBookData,

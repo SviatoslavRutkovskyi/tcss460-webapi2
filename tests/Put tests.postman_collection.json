@@ -1,0 +1,292 @@
+{
+	"info": {
+		"_postman_id": "c5059f4f-fbcf-4db3-abfe-5239e8fddffb",
+		"name": "Put tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "34112188"
+	},
+	"item": [
+		{
+			"name": "{{base_url}}/books/pass",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Update book by ISBN - Status code is 200\", () => {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Body has the field message\", () => {\r",
+							"    pm.expect(pm.response.text()).to.include(\"updated\");\r",
+							"})"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.collectionVariables.set(\"num1\", _.random(1,9));\r",
+							"pm.collectionVariables.set(\"num2\", _.random(1,9));\r",
+							"pm.collectionVariables.set(\"num3\", _.random(1,9));\r",
+							"pm.collectionVariables.set(\"num4\", _.random(1,9));\r",
+							"pm.collectionVariables.set(\"num5\", _.random(1,9));"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"isbn13\":\"9780439554930\",\r\n    \"rating_1_star\": \"{{num1}}\",\r\n    \"rating_2_star\": \"{{num2}}\",\r\n    \"rating_3_star\": \"{{num3}}\",\r\n    \"rating_4_star\": \"{{num4}}\",\r\n    \"rating_5_star\": \"{{num5}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/books/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"books",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{base_url}}/books/invalid_isbn13",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Response status should be 400\", () => {\r",
+							"    pm.response.to.have.status(400);\r",
+							"})\r",
+							"\r",
+							"pm.test(\"Body has the field message\", () => {\r",
+							"    pm.expect(pm.response.text()).to.include(\"Invalid or missing isbn13 - please refer to documentation\");\r",
+							"})\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"isbn13\":\"502\",\r\n    \"rating_1_star\": \"{{num1}}\",\r\n    \"rating_2_star\": \"{{num2}}\",\r\n    \"rating_3_star\": \"{{num3}}\",\r\n    \"rating_4_star\": \"{{num4}}\",\r\n    \"rating_5_star\": \"{{num5}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/books/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"books",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{base_url}}/books/invalid_ratings",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Response status should be 400\", () => {\r",
+							"    pm.response.to.have.status(400);\r",
+							"})\r",
+							"\r",
+							"pm.test(\"Body has the field message\", () => {\r",
+							"    pm.expect(pm.response.text()).to.include(\"Invalid or missing ratings – please refer to documentation\");\r",
+							"})\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"isbn13\":\"1111111111111\",\r\n    \"rating_1_star\": \"a\",\r\n    \"rating_2_star\": \"{{num2}}\",\r\n    \"rating_3_star\": \"{{num3}}\",\r\n    \"rating_4_star\": \"{{num4}}\",\r\n    \"rating_5_star\": \"{{num5}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/books/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"books",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{base_url}}/books/isbn_not_found",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Response status should be 404\", () => {\r",
+							"    pm.response.to.have.status(404);\r",
+							"})\r",
+							"\r",
+							"pm.test(\"Body has the field message\", () => {\r",
+							"    pm.expect(pm.response.text()).to.include(\"ISBN not found\");\r",
+							"})\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"isbn13\":\"1234567123123\",\r\n    \"rating_1_star\": \"{{num1}}\",\r\n    \"rating_2_star\": \"{{num2}}\",\r\n    \"rating_3_star\": \"{{num3}}\",\r\n    \"rating_4_star\": \"{{num4}}\",\r\n    \"rating_5_star\": \"{{num5}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/books/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"books",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiNSIsImlkIjoxLCJpYXQiOjE3MTU5NzE4NzUsImV4cCI6MTcxNzE4MTQ3NX0.uDOfUreK_iwuwnLYh48YB7hO4JcFgB3C64KaTiT4O8M",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "localhost:4000",
+			"type": "string"
+		},
+		{
+			"key": "isbn13",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "num1",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "num2",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "num3",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "num4",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "num5",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "isbn",
+			"value": ""
+		},
+		{
+			"key": "name",
+			"value": ""
+		},
+		{
+			"key": "count",
+			"value": ""
+		},
+		{
+			"key": "avg",
+			"value": ""
+		}
+	]
+}
