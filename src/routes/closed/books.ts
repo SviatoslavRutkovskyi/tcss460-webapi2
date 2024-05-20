@@ -437,7 +437,46 @@ bookRouter.get('/publication', (request: Request, response: Response) => {
             });
         });
 });
-
+/**
+ * @api {post} /book Request to add an entry
+ *
+ * @apiDescription Request to add a book  to the DB
+ *
+ * @apiName PostBooks
+ * @apiGroup Books
+ *
+ * @apiBody {nubmer} isbn13 book isbn13 *unique
+ * @apiBody {string} authors author of the given book
+ * @apiBody {number} pulbication_year publication year of the book [0-2024]
+ * @apiBody {string} original_title original title of the book
+ * @apiBody {string} title title of the book
+ * @apiBody {number} rating_1_star nuber of 1 star ratings [0+]
+ * @apiBody {number} rating_2_star nuber of 2 star ratings [0+]
+ * @apiBody {number} rating_3_star nuber of 3 star ratings [0+]
+ * @apiBody {number} rating_4_star nuber of 4 star ratings [0+]
+ * @apiBody {number} rating_5_star nuber of 5 star ratings [0+]
+ * @apiBody {string} image_url image url
+ * @apiBody {string} image_small_url small image url
+ *
+ * @apiSuccess (Success 201) {IBook} entry the IBook object:
+ *      "IBook {
+        isbn13: number;
+        authors: string;
+        publication: number;
+        original_title: string;
+        title: string;
+        ratings: IRatings;
+        icons: IUrlIcon;
+}"
+ *
+ * @apiError (400: isbn13 exists) {String} message "isbn13 ${isbn13} already exists in the database"
+ * @apiError (400: Invalid or missing isbn13) {String} message "Invalid or missing isbn13 - please refer to documentation"
+ * @apiError (400: Invalid or missing author) {String} message "Invalid or missing author - please refer to documentation"
+ * @apiError (400: Invalid or missing publication year) {String} message "Invalid or missing publication year - please refer to documentation"
+ * @apiError (400: Invalid or missing original title) {String} message "Invalid or missing original title - please refer to documentation"
+ * @apiError (400: Invalid or missing title) {String} message "Invalid or missing title - please refer to documentation"
+ * @apiUse JSONError
+ */
 bookRouter.post(
     '/',
     (request: Request, response: Response, next: NextFunction) => {
