@@ -106,8 +106,8 @@ function validateBookData(
  *
  * @apiDescription Get all books from the database
  *
- * @apiName GetBook
- * @apiGroup Book
+ * @apiName GetAllBooks
+ * @apiGroup Books
  *
  *
  * @apiSuccess (Success 201) {Object} entry the IBook object:
@@ -166,8 +166,8 @@ bookRouter.get('/all', (request, response) => {
  *
  * @apiDescription Get book from the database based on isbn
  *
- * @apiName GetISBN
- * @apiGroup Book
+ * @apiName GetByISBN
+ * @apiGroup Books
  *
  *
  * @apiSuccess (Success 200) {Object} entry the IBook object:
@@ -215,8 +215,8 @@ bookRouter.get('/isbn', (request: Request, response: Response) => {
  *
  * @apiDescription Get all books from the database using a specific author even if the book has co-authors.
  *
- * @apiName GetBook
- * @apiGroup Book
+ * @apiName GetByAuthor
+ * @apiGroup Books
  *
  *
  * @apiSuccess (Success 200) {Object} entry the IBook object:
@@ -266,8 +266,8 @@ bookRouter.get('/author', (request: Request, response: Response) => {
  *
  * @apiDescription Get all books from the database using a specific title.
  *
- * @apiName GetBook
- * @apiGroup Book
+ * @apiName GetByTitle
+ * @apiGroup Books
  *
  *
  * @apiSuccess (Success 200) {Object} entry the IBook object:
@@ -323,8 +323,8 @@ bookRouter.get('/title', (request: Request, response: Response) => {
  *
  * @apiDescription Get all books from the database using a rating.
  *
- * @apiName GetBook
- * @apiGroup Book
+ * @apiName GetByRating
+ * @apiGroup Books
  *
  *
  * @apiSuccess (Success 200) {Object} entry the IBook object:
@@ -385,8 +385,8 @@ bookRouter.get('/rating', (request: Request, response: Response) => {
  *
  * @apiDescription Get all books from the database using a specific year.
  *
- * @apiName GetBook
- * @apiGroup Book
+ * @apiName GetByYear
+ * @apiGroup Books
  *
  *
  * @apiSuccess (Success 200) {Object} entry the IBook object:
@@ -442,7 +442,7 @@ bookRouter.get('/publication', (request: Request, response: Response) => {
  *
  * @apiDescription Request to add a book  to the DB
  *
- * @apiName PostBooks
+ * @apiName PostBook
  * @apiGroup Books
  *
  * @apiBody {nubmer} isbn13 book isbn13 *unique
@@ -681,7 +681,7 @@ bookRouter.post(
  *
  * @apiDescription Request to alter a books rating within the DB
  *
- * @apiName PutBooks
+ * @apiName PutBook
  * @apiGroup Books
  *
  * @apiBody {number} isbn13 book isbn13 *unique [13 digits]
@@ -794,7 +794,7 @@ bookRouter.put(
  * @apiDescription Delete a book from the database based on its ISBN.
  *
  * @apiName DeleteBookByISBN
- * @apiGroup Book
+ * @apiGroup Books
  *
  * @apiParam {String} isbn The ISBN of the book to delete.
  *
@@ -837,7 +837,7 @@ bookRouter.delete('/isbn/:isbn', (request: Request, response: Response) => {
  * @apiDescription Delete a book from the database based on its title.
  *
  * @apiName DeleteBookByTitle
- * @apiGroup Book
+ * @apiGroup Books
  *
  * @apiParam {String} title The title of the book to delete.
  *
