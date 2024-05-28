@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "5be5455f-63ba-4474-848c-ffd2f0840198",
+		"_postman_id": "b5462887-5569-47b4-abaf-55144752011b",
 		"name": "Get tests",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "34355155"
+		"_exporter_id": "17915524"
 	},
 	"item": [
 		{
@@ -13,6 +13,8 @@
 					"listen": "test",
 					"script": {
 						"exec": [
+							"// Test for /book/isbn GET request success\r",
+							"\r",
 							"const response = pm.response.json();\r",
 							"\r",
 							"pm.test(\"status code is 200\", function () {\r",
@@ -369,13 +371,19 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{base.url}}/books/all",
+					"raw": "{{base.url}}/books/all?page=1",
 					"host": [
 						"{{base.url}}"
 					],
 					"path": [
 						"books",
 						"all"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						}
 					]
 				}
 			},

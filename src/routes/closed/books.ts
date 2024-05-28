@@ -83,15 +83,10 @@ function validateBookData(
             .send('Invalid or missing isbn13 - please refer to documentation');
     } else if (
         rating_1_star === undefined ||
-        isNaN(rating_1_star) ||
         rating_2_star === undefined ||
-        isNaN(rating_2_star) ||
         rating_3_star === undefined ||
-        isNaN(rating_3_star) ||
         rating_4_star === undefined ||
-        isNaN(rating_4_star) ||
-        rating_5_star === undefined ||
-        isNaN(rating_5_star)
+        rating_5_star === undefined
     ) {
         response
             .status(400)
@@ -106,69 +101,18 @@ function validateBookData(
  *
  * @apiDescription Get all books from the database
  *
- * @apiName GetAllBooks
- * @apiGroup Books
+ * @apiName GetBook
+ * @apiGroup Book
+ * 
+ * @apiParam {number} {page}
  *
- *
- * @apiSuccess (Success 201) {Object} entry the IBook object:
- * "IBook {
-        isbn13: number;
-        authors: string;
-        publication: number;
-        original_title: string;
-        title: string;
-        ratings: IRatings;
-        icons: IUrlIcon;
-}"
- *
- * @apiUse JSONError
- */
-bookRouter.get('/all', (request, response) => {
-    // Default values for pagination
-    // console.log(request.query.page);
-    let page = parseInt(request.query.page as string, 10);
-    if (!page || page < 1) {
-        page = 1; // Ensure page is always at least 1
-    }
-
-    let pageSize = parseInt(request.query.pageSize as string, 10);
-    if (!pageSize || pageSize < 1) {
-        pageSize = 10; // Provide a reasonable default and ensure it's positive
-    }
-    const offset = (page - 1) * pageSize;
-
-    const theQuery = `
-        SELECT isbn13, authors, publication_year, original_title, title, 
-               rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, 
-               image_url, image_small_url 
-        FROM books
-        LIMIT $1 OFFSET $2`;
-
-    pool.query(theQuery, [pageSize, offset])
-        .then((result) => {
-            response.status(200).send({
-                entries: result.rows.map(createInterface),
-                currentPage: page,
-                pageSize: pageSize,
-            });
-        })
-        .catch((error) => {
-            console.error('DB Query error on GET all');
-            console.error(error);
-            response.status(500).send({
-                message: 'server error - contact support',
-            });
-        });
-});
-
-/**
- * @api {get} /isbn get book information based on isbn
- *
- * @apiDescription Get book from the database based on isbn
- *
- * @apiName GetByISBN
- * @apiGroup Books
- *
+ * @apiBody {number} page default values used for pagination
+ * @apiBody {number} pageSize number of books to return per page
+ * @apiBody {number} offset starting point in the database from where records should be retrieved
+ * @apiBody {String} countQuery string query that returns the total number of books. 
+ * @apiBody {Object} countResult has the count rows in 'books'
+ * @apiBody {number} totalBooks the total number of books in the table
+ * @apiBody {number} totalPages has the total number of pages needed to display all books 
  *
  * @apiSuccess (Success 200) {Object} entry the IBook object:
  * "IBook {
@@ -181,9 +125,82 @@ bookRouter.get('/all', (request, response) => {
         icons: IUrlIcon;
 }"
  *
+ * @apiError (500) {String} message: 'server error - contact support'
  * @apiUse JSONError
- * @apiError (404) Book not found in the database
- * @apiError (500) Internal error with the query or connectivity issue to database
+ */
+bookRouter.get('/all', async (request: Request, response: Response) => {
+    try {
+        // Default values for pagination
+        let page = parseInt(request.query.page as string, 10);
+        if (!page || page < 1) {
+            page = 1; // Ensure page is always at least 1
+        }
+
+        let pageSize = parseInt(request.query.pageSize as string, 10);
+        if (!pageSize || pageSize < 1) {
+            pageSize = 10; // Provide a reasonable default and ensure it's positive
+        }
+        const offset = (page - 1) * pageSize;
+
+        // Query to get the total count of books
+        const countQuery = 'SELECT COUNT(*) FROM books';
+        const countResult = await pool.query(countQuery);
+        const totalBooks = parseInt(countResult.rows[0].count, 10);
+        const totalPages = Math.ceil(totalBooks / pageSize);
+
+        // Query to get the paginated results
+        const dataQuery = `
+            SELECT isbn13, authors, publication_year, original_title, title, 
+                   rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, 
+                   image_url, image_small_url 
+            FROM books
+            LIMIT $1 OFFSET $2`;
+
+        const dataResult = await pool.query(dataQuery, [pageSize, offset]);
+
+        response.status(200).send({
+            entries: dataResult.rows.map(createInterface),
+            currentPage: page,
+            pageSize: pageSize,
+            totalPages: totalPages,
+            totalBooks: totalBooks
+        });
+    } catch (error) {
+        console.error('DB Query error on GET all');
+        console.error(error);
+        response.status(500).send({
+            message: 'server error - contact support',
+        });
+    }
+});
+
+
+/**
+ * @api {get} /isbn get book information based on isbn
+ *
+ * @apiDescription Get book from the database based on ISBN.
+ *
+ * @apiName GetISBN
+ * @apiGroup Book
+ *
+ * @apiParam { id } isbn13: ISBN number of the book to get
+ *
+ * @apiSuccess (Success 200) {String} message: 'Book found with that ISBN'
+ * {Object} entry the IBook object:
+ * "IBook {
+        isbn13: number;
+        authors: string;
+        publication: number;
+        original_title: string;
+        title: string;
+        ratings: IRatings;
+        icons: IUrlIcon;
+}"
+ *
+ * @apiError (404) {String} message: 'Book not found'
+ * @apiError (500) {String} message: 'Internal error with the query or connectivity issue to database'
+ * @apiUse JSONError
+ * 
  */
 bookRouter.get('/isbn', (request: Request, response: Response) => {
     const { id } = request.query;
@@ -195,6 +212,7 @@ bookRouter.get('/isbn', (request: Request, response: Response) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
                     entries: result.rows[0],
+                    message: 'Book found with that ISBN'
                 });
             } else {
                 response.status(404).send({ message: 'Book not found' }); //No book found in database
@@ -215,11 +233,13 @@ bookRouter.get('/isbn', (request: Request, response: Response) => {
  *
  * @apiDescription Get all books from the database using a specific author even if the book has co-authors.
  *
- * @apiName GetByAuthor
- * @apiGroup Books
+ * @apiName GetBook
+ * @apiGroup Book
  *
+ * @apiParam { authorName } authors of the book to get
  *
- * @apiSuccess (Success 200) {Object} entry the IBook object:
+ * @apiSuccess (Success 200) {String} message
+ * {Object} entry the IBook object:
  * "IBook {
         isbn13: number;
         authors: string;
@@ -230,9 +250,10 @@ bookRouter.get('/isbn', (request: Request, response: Response) => {
         icons: IUrlIcon;
 }"
  *
+ * @apiError (404) {String} message "Book not found with that author(s)"
+ * @apiError (500) {String} message "Internal server error - contact support"
  * @apiUse JSONError
- * @apiError (404) Books not found by that author
- * @apiError (505) Connectivity issue to database or error with SQL query
+ * 
  */
 bookRouter.get('/author', (request: Request, response: Response) => {
     const { authorName } = request.query;
@@ -244,6 +265,7 @@ bookRouter.get('/author', (request: Request, response: Response) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
                     entries: result.rows.map(createInterface),
+                    message: 'Book(s) was successfully found'
                 });
             } else {
                 response
@@ -266,11 +288,13 @@ bookRouter.get('/author', (request: Request, response: Response) => {
  *
  * @apiDescription Get all books from the database using a specific title.
  *
- * @apiName GetByTitle
- * @apiGroup Books
+ * @apiName GetBook
+ * @apiGroup Book
+ * 
+ * @apiParam { titleName } original_title or title: title of the book to get
  *
- *
- * @apiSuccess (Success 200) {Object} entry the IBook object:
+ * @apiSuccess (Success 200) {String} message: "Book successfully found"
+ * {Object} entry the IBook object:
  * "IBook {
         isbn13: number;
         authors: string;
@@ -281,16 +305,15 @@ bookRouter.get('/author', (request: Request, response: Response) => {
         icons: IUrlIcon;
 }"
  *
+ * @apiError (404) {String} message "Book not found with that title"
+ * @apiError (500) {String} message "Internal server error - contact support"
  * @apiUse JSONError
- * @apiError (404) Books not found by that title
- * @apiError (505) Connectivity issue to database or error with SQL query
+ * 
  */
 bookRouter.get('/title', (request: Request, response: Response) => {
     const { titleName } = request.query;
     if (!titleName) {
-        return response
-            .status(400)
-            .send({ message: 'Missing title parameter' });
+        return response.status(400).send({ message: 'Missing title parameter' });
     }
 
     const theQuery = `
@@ -303,11 +326,10 @@ bookRouter.get('/title', (request: Request, response: Response) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
                     entries: result.rows.map(createInterface),
+                    message: 'Book successfully found'
                 });
             } else {
-                response
-                    .status(404)
-                    .send({ message: 'Book not found with that title' });
+                response.status(404).send({ message: 'Book not found with that title' });
             }
         })
         .catch((error) => {
@@ -318,16 +340,21 @@ bookRouter.get('/title', (request: Request, response: Response) => {
         });
 });
 
+
 /**
  * @api {get} /book/rating get all books with a specific rating equal to the value and higher.
  *
- * @apiDescription Get all books from the database using a rating.
+ * @apiDescription Get all books from the database where the rating is greater or equal to the passed rating.
+ * 
  *
- * @apiName GetByRating
- * @apiGroup Books
+ * @apiName GetBook
+ * @apiGroup Book
+ * 
+ * @apiParam { minRating } the minimum rating for query parameters to get all books of that rating and higher.
  *
  *
- * @apiSuccess (Success 200) {Object} entry the IBook object:
+ * @apiSuccess (Success 200) {String} message: 'Books found with that rating'
+ * {Object} entry the IBook object:
  * "IBook {
         isbn13: number;
         authors: string;
@@ -338,16 +365,17 @@ bookRouter.get('/title', (request: Request, response: Response) => {
         icons: IUrlIcon;
 }"
  *
+ * @apiError (400: Invalid rating provided with { minRating }) {String} message: "Invalid or missing minRating parameter"
+ * @apiError (404) {String} message: 'No books found with the specificed rating'
+ * @apiError (500) {String} message: Internal error with the query or connectivity issue to database
  * @apiUse JSONError
- * @apiError (404) the minRating isn't validated/not a valid number.
- * @apiError (505) Connectivity issue to database or error with SQL query
+ * 
  */
 bookRouter.get('/rating', (request: Request, response: Response) => {
     const { minRating } = request.query; // Get the minimum rating from query parameters
     const ratingFloat = parseFloat(minRating as string); // Parse as float for ratings that could be decimals
 
-    if (isNaN(ratingFloat)) {
-        // Check if the parsed rating is not a number
+    if (isNaN(ratingFloat)) { // Check if the parsed rating is not a number
         return response
             .status(400)
             .send({ message: 'Invalid or missing minRating parameter' });
@@ -365,6 +393,7 @@ bookRouter.get('/rating', (request: Request, response: Response) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
                     entries: result.rows.map(createInterface),
+                    message: 'Books found with that rating'
                 });
             } else {
                 response.status(404).send({
@@ -380,29 +409,32 @@ bookRouter.get('/rating', (request: Request, response: Response) => {
         });
 });
 
+
 /**
  * @api {get} /book/publication get all books with a specific publication year.
  *
  * @apiDescription Get all books from the database using a specific year.
  *
- * @apiName GetByYear
- * @apiGroup Books
+ * @apiName GetBook
+ * @apiGroup Book
  *
+ * @apiParam { year } year of publication for the books
  *
- * @apiSuccess (Success 200) {Object} entry the IBook object:
+ * @apiSuccess (Success 200: {message} is sent "book successfully found with year") {IBook} entry the IBook object:
  * "IBook {
-        isbn13: number;
-        authors: string;
-        publication: number;
-        original_title: string;
-        title: string;
-        ratings: IRatings;
-        icons: IUrlIcon;
-}"
+       isbn13: number;
+       authors: string;
+       publication: number;
+       original_title: string;
+       title: string;
+       ratings: IRatings;
+       icons: IUrlIcon;
+  }"
  *
+ * @apiError (404: Invalid year provided with { year }) {String} message: "Invalid or missing year paramter"
+ * @apiError (500) {String} Internal error with the query or connectivity issue to database
  * @apiUse JSONError
- * @apiError (404) Books not found by that year
- * @apiError (505) Connectivity issue to database or error with SQL query
+ *
  */
 bookRouter.get('/publication', (request: Request, response: Response) => {
     const { year } = request.query;
@@ -421,6 +453,7 @@ bookRouter.get('/publication', (request: Request, response: Response) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
                     entries: result.rows.map(createInterface),
+                    message: 'books successfully found with { year }'
                 });
             } else {
                 response
@@ -437,46 +470,8 @@ bookRouter.get('/publication', (request: Request, response: Response) => {
             });
         });
 });
-/**
- * @api {post} /book Request to add an entry
- *
- * @apiDescription Request to add a book  to the DB
- *
- * @apiName PostBook
- * @apiGroup Books
- *
- * @apiBody {nubmer} isbn13 book isbn13 *unique
- * @apiBody {string} authors author of the given book
- * @apiBody {number} pulbication_year publication year of the book [0-2024]
- * @apiBody {string} original_title original title of the book
- * @apiBody {string} title title of the book
- * @apiBody {number} rating_1_star nuber of 1 star ratings [0+]
- * @apiBody {number} rating_2_star nuber of 2 star ratings [0+]
- * @apiBody {number} rating_3_star nuber of 3 star ratings [0+]
- * @apiBody {number} rating_4_star nuber of 4 star ratings [0+]
- * @apiBody {number} rating_5_star nuber of 5 star ratings [0+]
- * @apiBody {string} image_url image url
- * @apiBody {string} image_small_url small image url
- *
- * @apiSuccess (Success 201) {IBook} entry the IBook object:
- *      "IBook {
-        isbn13: number;
-        authors: string;
-        publication: number;
-        original_title: string;
-        title: string;
-        ratings: IRatings;
-        icons: IUrlIcon;
-}"
- *
- * @apiError (400: isbn13 exists) {String} message "isbn13 ${isbn13} already exists in the database"
- * @apiError (400: Invalid or missing isbn13) {String} message "Invalid or missing isbn13 - please refer to documentation"
- * @apiError (400: Invalid or missing author) {String} message "Invalid or missing author - please refer to documentation"
- * @apiError (400: Invalid or missing publication year) {String} message "Invalid or missing publication year - please refer to documentation"
- * @apiError (400: Invalid or missing original title) {String} message "Invalid or missing original title - please refer to documentation"
- * @apiError (400: Invalid or missing title) {String} message "Invalid or missing title - please refer to documentation"
- * @apiUse JSONError
- */
+
+
 bookRouter.post(
     '/',
     (request: Request, response: Response, next: NextFunction) => {
@@ -677,11 +672,11 @@ bookRouter.post(
 );
 
 /**
- * @api {put} /books Request to alter an entry
+ * @api {put} /books Request to alter an exisitng entry
  *
  * @apiDescription Request to alter a books rating within the DB
  *
- * @apiName PutBook
+ * @apiName PutBooks
  * @apiGroup Books
  *
  * @apiBody {number} isbn13 book isbn13 *unique [13 digits]
@@ -708,6 +703,116 @@ bookRouter.post(
  * @apiUse JSONError
  */
 
+/**
+ * Old .put functionality that overwrote the ratings
+bookRouter.put(
+    '/',
+    validateBookData,
+    (request: Request, response: Response) => {
+        const {
+            isbn13,
+            rating_1_star,
+            rating_2_star,
+            rating_3_star,
+            rating_4_star,
+            rating_5_star,
+        } = request.body;
+        const theQuery = `UPDATE Books SET rating_1_star = $1, rating_2_star = $2, rating_3_star = $3, rating_4_star = $4, rating_5_star = $5 WHERE isbn13 = $6 RETURNING *`;
+        const values = [
+            rating_1_star,
+            rating_2_star,
+            rating_3_star,
+            rating_4_star,
+            rating_5_star,
+            isbn13,
+        ];
+
+        pool.query(theQuery, values)
+            .then((result) => {
+                if (result.rowCount === 1) {
+                    response.send({ updated: createInterface(result.rows[0]) });
+                } else {
+                    response.status(404).send('ISBN not found');
+                }
+            })
+            .catch((error) => {
+                console.error('DB Query error on PUT', error);
+                response.status(500).send({
+                    message: 'Server error - contact support',
+                    error: error.message,
+            .then((result) => {
+                const theQuery =
+                    'INSERT INTO BOOKS(id, isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *';
+                let count: number =
+                    parseInt(request.body.rating_1_star) +
+                    parseInt(request.body.rating_2_star) +
+                    parseInt(request.body.rating_3_star) +
+                    parseInt(request.body.rating_4_star) +
+                    parseInt(request.body.rating_5_star);
+                let avg: number =
+                    (parseInt(request.body.rating_1_star) +
+                        parseInt(request.body.rating_2_star) * 2 +
+                        parseInt(request.body.rating_3_star) * 3 +
+                        parseInt(request.body.rating_4_star) * 4 +
+                        parseInt(request.body.rating_5_star) * 5) /
+                    count;
+                const values = [
+                    parseInt(result.rows[0].max) + 1,
+                    request.body.isbn13,
+                    request.body.authors,
+                    request.body.publication_year,
+                    request.body.original_title,
+                    request.body.title,
+                    avg,
+                    count,
+                    request.body.rating_1_star,
+                    request.body.rating_2_star,
+                    request.body.rating_3_star,
+                    request.body.rating_4_star,
+                    request.body.rating_5_star,
+                    request.body.image_url,
+                    request.body.image_small_url,
+                ];
+
+                pool.query(theQuery, values)
+                    .then((result) => {
+                        // result.rows array are the records returned from the SQL statement.
+                        // An INSERT statement will return a single row, the row that was inserted.
+                        response.status(201).send({
+                            entry: createInterface(result.rows[0]),
+                        });
+                    })
+                    .catch((error) => {
+                        if (
+                            error.detail != undefined &&
+                            (error.detail as string).endsWith('already exists.')
+                        ) {
+                            console.error('Name exists');
+                            response.status(400).send({
+                                message: 'Name exists',
+                            });
+                        } else {
+                            //log the error
+                            console.error('DB Query error on POST');
+                            console.error(error);
+                            response.status(500).send({
+                                message: 'server error - contact support 2',
+                                cl: result.rows[0].count + 1,
+                            });
+                        }
+                    });
+            })
+            .catch((error) => {
+                console.error('DB Query error on POST, Count');
+                console.error(error);
+                response.status(500).send({
+                    message: 'server error - contact support 3',
+                    cl: 'failed on count',
+                });
+            });
+    }
+);
+ */
 bookRouter.put(
     '/',
     validateBookData,
@@ -789,90 +894,46 @@ bookRouter.put(
 );
 
 /**
- * @api {delete} /book/:isbn Delete a book by ISBN
+ * @api {delete} /book Delete a book by ISBN
+ * @apiDescription Delete a book from the database by ISBN
  *
- * @apiDescription Delete a book from the database based on its ISBN.
+ * @apiName DeleteBook
+ * @apiGroup Book
  *
- * @apiName DeleteBookByISBN
- * @apiGroup Books
+ * @apiParam {number} isbn13 ISBN number of the book to delete
  *
- * @apiParam {String} isbn The ISBN of the book to delete.
- *
- * @apiSuccess (Success 200) {String} message "Book deleted successfully."
- *
- * @apiError (404) {String} message "Book not found."
- * @apiError (500) {String} message "Server error - contact support."
+ * @apiSuccess (Success 200) {String} message "Book deleted successfully"
+ * @apiError (404) {String} message "Book not found"
+ * @apiError (500) {String} message "Internal server error - contact support"
  */
-bookRouter.delete('/isbn/:isbn', (request: Request, response: Response) => {
-    const { isbn } = request.params;
-    const theQuery = 'DELETE FROM books WHERE isbn13 = $1 RETURNING *';
+bookRouter.delete('/', (request: Request, response: Response) => {
+    const { isbn13 } = request.body;
 
-    if (!isbn) {
-        return response.status(400).send({ message: 'Missing ISBN parameter' });
-    }
-
-    pool.query(theQuery, [isbn])
-        .then((result) => {
-            if (result.rowCount > 0) {
-                response.status(200).send({
-                    message: 'Book deleted successfully.',
-                });
-            } else {
-                response.status(404).send({
-                    message: 'Book not found.',
-                });
-            }
-        })
-        .catch((error) => {
-            console.error('DB Query error on DELETE /:isbn', error);
-            response.status(500).send({
-                message: 'Server error - contact support.',
-            });
+    if (!isbn13) {
+        return response.status(400).send({
+            message: 'ISBN number is required',
         });
-});
-
-/**
- * @api {delete} /book/title/:title Delete a book by title
- *
- * @apiDescription Delete a book from the database based on its title.
- *
- * @apiName DeleteBookByTitle
- * @apiGroup Books
- *
- * @apiParam {String} title The title of the book to delete.
- *
- * @apiSuccess (Success 200) {String} message "Book deleted successfully."
- *
- * @apiError (404) {String} message "Book not found."
- * @apiError (500) {String} message "Server error - contact support."
- */
-bookRouter.delete('/title/:title', (request: Request, response: Response) => {
-    const { title } = request.params;
-    const theQuery =
-        'DELETE FROM books WHERE original_title ILIKE $1 OR title ILIKE $1 RETURNING *';
-
-    if (!title) {
-        return response
-            .status(400)
-            .send({ message: 'Missing title parameter' });
     }
 
-    pool.query(theQuery, [`%${title}%`])
+    const deleteQuery = 'DELETE FROM books WHERE isbn13 = $1';
+
+    pool.query(deleteQuery, [isbn13])
         .then((result) => {
             if (result.rowCount > 0) {
                 response.status(200).send({
-                    message: 'Book deleted successfully.',
+                    message: 'Book deleted successfully',
                 });
             } else {
                 response.status(404).send({
-                    message: 'Book not found.',
+                    message: 'Book not found',
                 });
             }
         })
         .catch((error) => {
-            console.error('DB Query error on DELETE /title/:title', error);
+            console.error('DB Query error on DELETE');
+            console.error(error);
             response.status(500).send({
-                message: 'Server error - contact support.',
+                message: 'Internal server error - contact support',
             });
         });
 });
