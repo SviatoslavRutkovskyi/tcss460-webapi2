@@ -104,7 +104,7 @@ function validateBookData(
  * @apiName GetBook
  * @apiGroup Book
  * 
- * @apiParam {number} {page}
+ * @apiParam {number} {page} allows to change between pages of books
  *
  * @apiBody {number} page default values used for pagination
  * @apiBody {number} pageSize number of books to return per page
