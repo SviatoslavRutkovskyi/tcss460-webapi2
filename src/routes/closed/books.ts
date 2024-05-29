@@ -97,34 +97,32 @@ function validateBookData(
 }
 
 /**
- * @api {get} /book get all books
- *
- * @apiDescription Get all books from the database
- *
- * @apiName GetBook
- * @apiGroup Book
+ * @api {get} /books/all Get all books with pagination
+ * @apiName GetAllBooks
+ * @apiGroup Books
+ * @apiDescription Returns all books from the database.
  * 
- * @apiParam {number} {page} allows to change between pages of books
+ * @apiParam {Number} [page=1] The page number for pagination.
+ * @apiParam {Number} [pageSize=10] The number of books to return per page.
  *
- * @apiBody {number} page default values used for pagination
- * @apiBody {number} pageSize number of books to return per page
- * @apiBody {number} offset starting point in the database from where records should be retrieved
- * @apiBody {String} countQuery string query that returns the total number of books. 
- * @apiBody {Object} countResult has the count rows in 'books'
- * @apiBody {number} totalBooks the total number of books in the table
- * @apiBody {number} totalPages has the total number of pages needed to display all books 
- *
- * @apiSuccess (Success 200) {Object} entry the IBook object:
- * "IBook {
-        isbn13: number;
-        authors: string;
-        publication: number;
-        original_title: string;
-        title: string;
-        ratings: IRatings;
-        icons: IUrlIcon;
-}"
- *
+ * @apiSuccess {Object[]} entries List of books.
+ * @apiSuccess {String} entries.isbn13 ISBN-13 of the book.
+ * @apiSuccess {String} entries.authors Authors of the book.
+ * @apiSuccess {Number} entries.publication_year Publication year of the book.
+ * @apiSuccess {String} entries.original_title Original title of the book.
+ * @apiSuccess {String} entries.title Title of the book.
+ * @apiSuccess {Number} entries.rating_1_star 1-star rating count.
+ * @apiSuccess {Number} entries.rating_2_star 2-star rating count.
+ * @apiSuccess {Number} entries.rating_3_star 3-star rating count.
+ * @apiSuccess {Number} entries.rating_4_star 4-star rating count.
+ * @apiSuccess {Number} entries.rating_5_star 5-star rating count.
+ * @apiSuccess {String} entries.image_url URL to the book's image.
+ * @apiSuccess {String} entries.image_small_url URL to the book's small image.
+ * @apiSuccess {Number} currentPage Current page number.
+ * @apiSuccess {Number} pageSize Number of books per page.
+ * @apiSuccess {Number} totalPages Total number of pages.
+ * @apiSuccess {Number} totalBooks Total number of books.
+ * 
  * @apiError (500) {String} message: 'server error - contact support'
  * @apiUse JSONError
  */
@@ -176,26 +174,30 @@ bookRouter.get('/all', async (request: Request, response: Response) => {
 
 
 /**
- * @api {get} /isbn get book information based on isbn
- *
- * @apiDescription Get book from the database based on ISBN.
- *
+ * @api {get} /books/isbn get book information based on isbn
  * @apiName GetISBN
  * @apiGroup Book
+ * 
+ * @apiDescription Get book from the database based on ISBN.
  *
- * @apiParam { id } isbn13: ISBN number of the book to get
+ * 
  *
- * @apiSuccess (Success 200) {String} message: 'Book found with that ISBN'
- * {Object} entry the IBook object:
- * "IBook {
-        isbn13: number;
-        authors: string;
-        publication: number;
-        original_title: string;
-        title: string;
-        ratings: IRatings;
-        icons: IUrlIcon;
-}"
+ * @apiParam {number} [id] of isbn13: ISBN number of the book to get
+ *
+ * @apiSuccess (Success 200) {String} [message] Book found with that ISBN
+ * @apiSuccess {Object[]} entries List of books.
+ * @apiSuccess {String} entries.isbn13 ISBN-13 of the book.
+ * @apiSuccess {String} entries.authors Authors of the book.
+ * @apiSuccess {Number} entries.publication_year Publication year of the book.
+ * @apiSuccess {String} entries.original_title Original title of the book.
+ * @apiSuccess {String} entries.title Title of the book.
+ * @apiSuccess {Number} entries.rating_1_star 1-star rating count.
+ * @apiSuccess {Number} entries.rating_2_star 2-star rating count.
+ * @apiSuccess {Number} entries.rating_3_star 3-star rating count.
+ * @apiSuccess {Number} entries.rating_4_star 4-star rating count.
+ * @apiSuccess {Number} entries.rating_5_star 5-star rating count.
+ * @apiSuccess {String} entries.image_url URL to the book's image.
+ * @apiSuccess {String} entries.image_small_url URL to the book's small image.
  *
  * @apiError (404) {String} message: 'Book not found'
  * @apiError (500) {String} message: 'Internal error with the query or connectivity issue to database'
@@ -236,7 +238,7 @@ bookRouter.get('/isbn', (request: Request, response: Response) => {
  * @apiName GetBook
  * @apiGroup Book
  *
- * @apiParam { authorName } authors of the book to get
+ * @apiParam {String} [authorName] of the book to get
  *
  * @apiSuccess (Success 200) {String} message
  * {Object} entry the IBook object:
@@ -291,7 +293,7 @@ bookRouter.get('/author', (request: Request, response: Response) => {
  * @apiName GetBook
  * @apiGroup Book
  * 
- * @apiParam { titleName } original_title or title: title of the book to get
+ * @apiParam { String } [titleName] of original_title or title: title of the book to get
  *
  * @apiSuccess (Success 200) {String} message: "Book successfully found"
  * {Object} entry the IBook object:
@@ -350,7 +352,7 @@ bookRouter.get('/title', (request: Request, response: Response) => {
  * @apiName GetBook
  * @apiGroup Book
  * 
- * @apiParam { minRating } the minimum rating for query parameters to get all books of that rating and higher.
+ * @apiParam { number } [minRating] the minimum rating for query parameters to get all books of that rating and higher.
  *
  *
  * @apiSuccess (Success 200) {String} message: 'Books found with that rating'
@@ -418,7 +420,7 @@ bookRouter.get('/rating', (request: Request, response: Response) => {
  * @apiName GetBook
  * @apiGroup Book
  *
- * @apiParam { year } year of publication for the books
+ * @apiParam { number } [year] of publication for the books
  *
  * @apiSuccess (Success 200: {message} is sent "book successfully found with year") {IBook} entry the IBook object:
  * "IBook {
@@ -431,8 +433,8 @@ bookRouter.get('/rating', (request: Request, response: Response) => {
        icons: IUrlIcon;
   }"
  *
- * @apiError (404: Invalid year provided with { year }) {String} message: "Invalid or missing year paramter"
- * @apiError (500) {String} Internal error with the query or connectivity issue to database
+ * @apiError (404: Invalid year provided with year ) {String} message: "Invalid or missing year paramter"
+ * @apiError (500) {String} message: Internal error with the query or connectivity issue to database
  * @apiUse JSONError
  *
  */
@@ -900,7 +902,7 @@ bookRouter.put(
  * @apiName DeleteBook
  * @apiGroup Book
  *
- * @apiParam {number} isbn13 ISBN number of the book to delete
+ * @apiParam {number} [isbn13] ISBN number of the book to delete
  *
  * @apiSuccess (Success 200) {String} message "Book deleted successfully"
  * @apiError (404) {String} message "Book not found"
