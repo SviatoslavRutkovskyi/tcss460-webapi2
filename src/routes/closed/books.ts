@@ -106,7 +106,7 @@ function validateBookData(
  * @apiName GetAllBooks
  * @apiGroup Books
  * @apiDescription Returns all books from the database.
- * 
+ *
  * @apiParam {Number} [page=1] The page number for pagination.
  * @apiParam {Number} [pageSize=10] The number of books to return per page.
  *
@@ -127,7 +127,7 @@ function validateBookData(
  * @apiSuccess {Number} pageSize Number of books per page.
  * @apiSuccess {Number} totalPages Total number of pages.
  * @apiSuccess {Number} totalBooks Total number of books.
- * 
+ *
  * @apiError (500) {String} message: 'server error - contact support'
  * @apiUse JSONError
  */
@@ -153,9 +153,7 @@ bookRouter.get('/all', async (request: Request, response: Response) => {
 
         // Query to get the paginated results
         const dataQuery = `
-            SELECT isbn13, authors, publication_year, original_title, title, 
-                   rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, 
-                   image_url, image_small_url 
+            SELECT isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url
             FROM books
             LIMIT $1 OFFSET $2`;
 
@@ -166,7 +164,7 @@ bookRouter.get('/all', async (request: Request, response: Response) => {
             currentPage: page,
             pageSize: pageSize,
             totalPages: totalPages,
-            totalBooks: totalBooks
+            totalBooks: totalBooks,
         });
     } catch (error) {
         console.error('DB Query error on GET all');
@@ -177,15 +175,14 @@ bookRouter.get('/all', async (request: Request, response: Response) => {
     }
 });
 
-
 /**
  * @api {get} /books/isbn get book information based on isbn
  * @apiName GetISBN
  * @apiGroup Book
- * 
+ *
  * @apiDescription Get book from the database based on ISBN.
  *
- * 
+ *
  *
  * @apiParam {number} [id] of isbn13: ISBN number of the book to get
  *
@@ -207,19 +204,19 @@ bookRouter.get('/all', async (request: Request, response: Response) => {
  * @apiError (404) {String} message: 'Book not found'
  * @apiError (500) {String} message: 'Internal error with the query or connectivity issue to database'
  * @apiUse JSONError
- * 
+ *
  */
 bookRouter.get('/isbn', (request: Request, response: Response) => {
     const { id } = request.query;
     const theQuery =
-        'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books WHERE isbn13 = $1';
+        'SELECT isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books WHERE isbn13 = $1';
 
     pool.query(theQuery, [id])
         .then((result) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
                     entries: result.rows[0],
-                    message: 'Book found with that ISBN'
+                    message: 'Book found with that ISBN',
                 });
             } else {
                 response.status(404).send({ message: 'Book not found' }); //No book found in database
@@ -265,14 +262,14 @@ bookRouter.get('/isbn', (request: Request, response: Response) => {
 bookRouter.get('/author', (request: Request, response: Response) => {
     const { authorName } = request.query;
     const theQuery =
-        'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books WHERE authors ILIKE $1';
+        'SELECT isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books WHERE authors ILIKE $1';
 
     pool.query(theQuery, [`%${authorName}%`])
         .then((result) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
                     entries: result.rows.map(createInterface),
-                    message: 'Book(s) was successfully found'
+                    message: 'Book(s) was successfully found',
                 });
             } else {
                 response
@@ -320,11 +317,13 @@ bookRouter.get('/author', (request: Request, response: Response) => {
 bookRouter.get('/title', (request: Request, response: Response) => {
     const { titleName } = request.query;
     if (!titleName) {
-        return response.status(400).send({ message: 'Missing title parameter' });
+        return response
+            .status(400)
+            .send({ message: 'Missing title parameter' });
     }
 
     const theQuery = `
-        SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url 
+        SELECT isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url
         FROM books 
         WHERE original_title ILIKE $1 OR title ILIKE $1`;
 
@@ -333,10 +332,12 @@ bookRouter.get('/title', (request: Request, response: Response) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
                     entries: result.rows.map(createInterface),
-                    message: 'Book successfully found'
+                    message: 'Book successfully found',
                 });
             } else {
-                response.status(404).send({ message: 'Book not found with that title' });
+                response
+                    .status(404)
+                    .send({ message: 'Book not found with that title' });
             }
         })
         .catch((error) => {
@@ -346,7 +347,6 @@ bookRouter.get('/title', (request: Request, response: Response) => {
             });
         });
 });
-
 
 /**
  * @api {get} /book/rating get all books with a specific rating equal to the value and higher.
@@ -382,16 +382,15 @@ bookRouter.get('/rating', (request: Request, response: Response) => {
     const { minRating } = request.query; // Get the minimum rating from query parameters
     const ratingFloat = parseFloat(minRating as string); // Parse as float for ratings that could be decimals
 
-    if (isNaN(ratingFloat)) { // Check if the parsed rating is not a number
+    if (isNaN(ratingFloat)) {
+        // Check if the parsed rating is not a number
         return response
             .status(400)
             .send({ message: 'Invalid or missing minRating parameter' });
     }
 
     const theQuery = `
-        SELECT isbn13, authors, publication_year, original_title, title,
-               rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star,
-               image_url, image_small_url, rating_avg
+        SELECT isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url
         FROM books
         WHERE rating_avg >= $1`; // Use parameterized query to avoid SQL injection
 
@@ -400,7 +399,7 @@ bookRouter.get('/rating', (request: Request, response: Response) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
                     entries: result.rows.map(createInterface),
-                    message: 'Books found with that rating'
+                    message: 'Books found with that rating',
                 });
             } else {
                 response.status(404).send({
@@ -415,7 +414,6 @@ bookRouter.get('/rating', (request: Request, response: Response) => {
             });
         });
 });
-
 
 /**
  * @api {get} /book/publication get all books with a specific publication year.
@@ -453,14 +451,14 @@ bookRouter.get('/publication', (request: Request, response: Response) => {
     }
 
     const theQuery =
-        'SELECT isbn13, authors, publication_year, original_title, title, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books WHERE publication_year = $1';
+        'SELECT isbn13, authors, publication_year, original_title, title, rating_avg, rating_count, rating_1_star, rating_2_star, rating_3_star, rating_4_star, rating_5_star, image_url, image_small_url FROM books WHERE publication_year = $1';
 
     pool.query(theQuery, [yearInt])
         .then((result) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
                     entries: result.rows.map(createInterface),
-                    message: 'books successfully found with { year }'
+                    message: 'books successfully found with { year }',
                 });
             } else {
                 response
