@@ -186,20 +186,17 @@ bookRouter.get('/all', async (request: Request, response: Response) => {
  *
  * @apiParam {number} [id] of isbn13: ISBN number of the book to get
  *
- * @apiSuccess (Success 200) {String} [message] Book found with that ISBN
- * @apiSuccess {Object[]} entries List of books.
- * @apiSuccess {String} entries.isbn13 ISBN-13 of the book.
- * @apiSuccess {String} entries.authors Authors of the book.
- * @apiSuccess {Number} entries.publication_year Publication year of the book.
- * @apiSuccess {String} entries.original_title Original title of the book.
- * @apiSuccess {String} entries.title Title of the book.
- * @apiSuccess {Number} entries.rating_1_star 1-star rating count.
- * @apiSuccess {Number} entries.rating_2_star 2-star rating count.
- * @apiSuccess {Number} entries.rating_3_star 3-star rating count.
- * @apiSuccess {Number} entries.rating_4_star 4-star rating count.
- * @apiSuccess {Number} entries.rating_5_star 5-star rating count.
- * @apiSuccess {String} entries.image_url URL to the book's image.
- * @apiSuccess {String} entries.image_small_url URL to the book's small image.
+ * @apiSuccess (Success 200) {String} message
+ * @apiSuccess {Object} entry the IBook object:
+ * "IBook {
+        isbn13: number;
+        authors: string;
+        publication: number;
+        original_title: string;
+        title: string;
+        ratings: IRatings;
+        icons: IUrlIcon;
+}"
  *
  * @apiError (404) {String} message: 'Book not found'
  * @apiError (500) {String} message: 'Internal error with the query or connectivity issue to database'
@@ -215,7 +212,7 @@ bookRouter.get('/isbn', (request: Request, response: Response) => {
         .then((result) => {
             if (result.rows.length > 0) {
                 response.status(200).send({
-                    entries: result.rows[0],
+                    entries: result.rows.map(createInterface),
                     message: 'Book found with that ISBN',
                 });
             } else {

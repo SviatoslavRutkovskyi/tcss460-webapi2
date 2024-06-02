@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "b5462887-5569-47b4-abaf-55144752011b",
+		"_postman_id": "5be5455f-63ba-4474-848c-ffd2f0840198",
 		"name": "Get tests",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "17915524"
+		"_exporter_id": "34355155"
 	},
 	"item": [
 		{
@@ -13,8 +13,6 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"// Test for /book/isbn GET request success\r",
-							"\r",
 							"const response = pm.response.json();\r",
 							"\r",
 							"pm.test(\"status code is 200\", function () {\r",
@@ -23,8 +21,8 @@
 							"\r",
 							"pm.test(\"corect isbn\", function () {\r",
 							"    pm.expect(response).to.haveOwnProperty(\"entries\");\r",
-							"    pm.expect(response.entries).to.haveOwnProperty(\"isbn13\");\r",
-							"    pm.expect(response.entries.isbn13).to.equal(\"9780743273560\");\r",
+							"    pm.expect(response.entries[0]).to.haveOwnProperty(\"isbn13\");\r",
+							"    pm.expect(response.entries[0].isbn13).to.equal(\"9780743273560\");\r",
 							"});"
 						],
 						"type": "text/javascript",
@@ -371,19 +369,13 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{base.url}}/books/all?page=1",
+					"raw": "{{base.url}}/books/all",
 					"host": [
 						"{{base.url}}"
 					],
 					"path": [
 						"books",
 						"all"
-					],
-					"query": [
-						{
-							"key": "page",
-							"value": "1"
-						}
 					]
 				}
 			},
